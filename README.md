@@ -1,1 +1,1 @@
-# products-squad
+# products
