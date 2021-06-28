@@ -9,7 +9,8 @@ Repo for the products team for NYU DevOps 2021 summer
 | description | String | Product Description
 | price | Float | Product Price
 | inventory | Int | Product Amount
-| Owner | String | OwnerID|
+| Owner | String | OwnerID
+| Category | String | Product Category|
 
 ## API Documentation
 ### URLS
