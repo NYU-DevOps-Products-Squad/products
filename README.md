@@ -1,5 +1,6 @@
 # products
-Repo for the products team for NYU DevOps 2021 summer
+Repo for the products team or NYU DevOps 2021 summer
+
 
 ### Database  Fields
 | Fields | Type | Description
