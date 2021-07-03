@@ -5,6 +5,8 @@ All of the models are stored in this module
 """
 import logging
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
+from sqlalchemy.exc import InvalidRequestError
 
 logger = logging.getLogger("flask.app")
 
@@ -18,19 +20,24 @@ class DataValidationError(Exception):
     pass
 
 
-class YourResourceModel(db.Model):
+class Product(db.Model):
     """
-    Class that represents a <your resource model name>
+    Class that represents a product
     """
-
+    logger = logging.getLogger(__name__)
     app = None
 
     # Table Schema
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(63))
+    description = db.Column(db.String(128), nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    inventory = db.Column(db.Integer, nullable=False)
+    owner = db.Column(db.String(63), nullable=False)
+    category =  db.Column(db.String(63), nullable=False)
 
     def __repr__(self):
-        return "<YourResourceModel %r id=[%s]>" % (self.name, self.id)
+        return "<<Product> %r id=[%s] %r %f %d %r %r>" % (self.name, self.id, self.description, self.price, self.inventory, self.owner, self.category)
 
     def create(self):
         """
@@ -41,18 +48,29 @@ class YourResourceModel(db.Model):
         db.session.add(self)
         db.session.commit()
 
-    def save(self):
+    def update(self):
         """
-        Updates a YourResourceModel to the database
+        Updates a Product to the database
         """
-        logger.info("Saving %s", self.name)
-        db.session.commit()
+        self.logger.info("Updating %s", self.name)
+
+        if not self.id:
+            self.logger.info("empty ID")
+            raise DataValidationError("empty ID")
+        try:
+            db.session.commit()
+        except InvalidRequestError:
+            db.session.rollbacl()
+        
 
     def delete(self):
         """ Removes a YourResourceModel from the data store """
-        logger.info("Deleting %s", self.name)
+        self.logger.info("Deleting %s", self.name)
         db.session.delete(self)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except InvalidRequestError:
+            db.session.rollback()
 
     def serialize(self):
         """ Serializes a YourResourceModel into a dictionary """
