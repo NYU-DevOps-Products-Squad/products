@@ -31,7 +31,7 @@ def index():
     )
 
 ######################################################################
-# UPDATE AN EXISTING PET
+# UPDATE AN EXISTING PRODUCT
 ######################################################################
 @app.route("/products/<string:product_id>", methods=["PUT"])
 @requires_content_type("application/json")
@@ -53,7 +53,7 @@ def update_pets(pet_id):
 
 
 ######################################################################
-# DELETE A PET
+# DELETE A PRODUCT
 ######################################################################
 @app.route("/products/<string:product_id>", methods=["DELETE"])
 def delete_pets(pet_id):
