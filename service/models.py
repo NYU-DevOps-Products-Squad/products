@@ -1,5 +1,5 @@
 """
-Models for YourResourceModel
+Models for YourResourceModel1
 
 All of the models are stored in this module
 """
