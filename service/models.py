@@ -4,6 +4,7 @@ Models for YourResourceModel
 All of the models are stored in this module
 """
 import logging
+#import uuid
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from . import app
@@ -15,7 +16,7 @@ logger = logging.getLogger("flask.app")
 
 # Create the SQLAlchemy object to be initialized later in init_db()
 db = SQLAlchemy()
-
+migrate = Migrate(app, db)
 
 class DataValidationError(Exception):
     """ Used for an data validation errors when deserializing """
@@ -31,7 +32,7 @@ class Product(db.Model):
     app = None
 
     # Table Schema
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, db.Sequence('product_id_seq'), primary_key=True)
     name = db.Column(db.String(63), nullable=False)
     description = db.Column(db.String(128), nullable=False)
     price = db.Column(db.FLOAT(8))

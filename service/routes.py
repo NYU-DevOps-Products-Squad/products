@@ -53,6 +53,51 @@ def update_products(product_id):
     app.logger.info("Product with id [%d] updated.", product.id)
     return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
 
+@app.route("/products", methods=["GET"])
+def list_product():
+    """ Returns all of the Products """
+    app.logger.info("Request for product list")
+    products = []
+    products = Product.all()
+
+    results = [product.serialize() for product in products]
+    return make_response(jsonify(results), status.HTTP_200_OK)
+
+######################################################################
+# RETRIEVE A PRODUCT
+######################################################################
+@app.route("/products/<string:product_id>", methods=["GET"])
+def get_product(product_id):
+    """
+    Retrieve a single Product
+
+    This endpoint will return a Product based on it's id
+    """
+    app.logger.info("Request for product with id: %s", product_id)
+    product = Product.find(product_id)
+    
+    return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
+
+######################################################################
+# ADD A NEW PRODUCT
+######################################################################
+@app.route("/products", methods=["POST"])
+def create_product():
+    """
+    Creates a Product
+    This endpoint will create a Product based the data in the body that is posted
+    """
+    app.logger.info("Request to create a product")
+    product = Product()
+    product.deserialize(request.get_json())
+    product.create()
+    message = product.serialize()
+    location_url = url_for("get_product", product_id=product.id, _external=True)
+    return make_response(
+        jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
+    )
+
+
 
 ######################################################################
 # DELETE A PRODUCT
@@ -83,51 +128,6 @@ def purchase_products(product_id):
             status.HTTP_404_NOT_FOUND, "product with id '{}' was not found.".format(product_id)
         )
     return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
-
-@app.route("/products", methods=["GET"])
-def list_product():
-    """ Returns all of the products """
-    app.logger.info("Request for product list")
-    products = []
-    products = Product.all()
-
-    results = [product.serialize() for product in products]
-    return make_response(jsonify(results), status.HTTP_200_OK)
-
-######################################################################
-# RETRIEVE A product
-######################################################################
-@app.route("/products/<int:product_id>", methods=["GET"])
-def get_product(product_id):
-    """
-    Retrieve a single product
-
-    This endpoint will return a product based on it's id
-    """
-    app.logger.info("Request for product with id: %s", product_id)
-    product = Product.find(product_id)
-    if not product:
-        raise NotFound("product with id '{}' was not found.".format(product_id))
-    return product.serialize(), status.HTTP_200_OK
-
-######################################################################
-# ADD A NEW product
-######################################################################
-@app.route("/products", methods=["POST"])
-def create_product():
-    """
-    Creates a product
-    This endpoint will create a product based the data in the body that is posted
-    """
-    app.logger.info("Request to create a product")
-    product = Product()
-    product.deserialize(request.get_json())
-    product.create()
-    message = product.serialize()
-    location_url = url_for("get_product", product_id=product.id, _external=True)
-    return make_response(
-        jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
-    )
 
 
 ######################################################################
