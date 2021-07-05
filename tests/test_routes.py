@@ -18,7 +18,7 @@ from .factories import ProductFactory
 #  T E S T   C A S E S
 ######################################################################
 DATABASE_URI = os.getenv(
-    "DATABASE_URI", "postgres://postgres:postgres@localhost:5432/postgres"
+    "DATABASE_URI", "postgresql://postgres:postgres@localhost:5432/postgres"
 )
 
 class TestProductServer(TestCase):
@@ -59,6 +59,10 @@ class TestProductServer(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
         self.assertEqual(data["name"],"Product Demo REST API Service")
+    
+    @mock.path('service.__init__', side_effect=ValueError())
+    def test_init_exception(self):
+        import service
 
     def test_update_product(self):
         """ Update an existing Product """
@@ -67,23 +71,109 @@ class TestProductServer(TestCase):
         test_product_name = test_product.name
         test_product_description = test_product.description
         test_product_price = test_product.price
-        test_product_inventory = test_product.inventory
-        test_product_owner = test_product.owner
-        test_product_category = test_product.category
         resp = self.app.post(
             "/api/products", json=test_product.serialize(), content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
 
         # update the product
         new_product = resp.get_json()
-        new_product["category"] = "Clothing"
+        new_product["category"] = "Education"
         resp = self.app.put(
             "/api/products/{}".format(new_product["id"]),
             json=new_product,
             content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         updated_product = resp.get_json()
-        self.assertEqual(updated_product["category"], "Clothing")
+        self.assertEqual(updated_product["category"], "Education")
+
+        # create an update request with partial information
+        part_product = resp.get_json()
+        part_product["category"] = ""
+        resp = self.app.put(
+            "/api/products/{}".format(part_product["id"]),
+            json=part_product,
+            content_type="application/json")
+
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        updated_product = resp.get_json()
+        self.assertEqual(updated_product["category"], "Education")
+
+        part_product = resp.get_json()
+        part_product["name"] = ""
+        resp = self.app.put(
+            "/api/products/{}".format(part_product["id"]),
+            json=part_product,
+            content_type="application/json")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        updated_product = resp.get_json()
+        self.assertEqual(updated_product["name"], test_product_name)
+
+        part_product = resp.get_json()
+        part_product["description"] = ""
+        resp = self.app.put(
+            "/api/products/{}".format(part_product["id"]),
+            json=part_product,
+            content_type="application/json")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        updated_product = resp.get_json()
+        self.assertEqual(updated_product["description"], test_product_description)
+
+        part_product = resp.get_json()
+        part_product["price"] = ""
+        resp = self.app.put(
+            "/api/products/{}".format(part_product["id"]),
+            json=part_product,
+            content_type="application/json")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        updated_product = resp.get_json()
+        self.assertEqual(updated_product["price"], test_product_price)
+
+    def test_update_product_not_found(self):
+        """ Update a product that's not found """
+        test_product = ProductFactory()
+        resp = self.app.put(
+            "/api/products/0",
+            json=test_product.serialize(),
+            content_type="application/json")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_product_bad_request(self):
+        """ Update a product with bad request body """
+        # create a product to update
+        test_product = ProductFactory()
+        resp = self.app.post(
+            "/api/products", json=test_product.serialize(), content_type="application/json")
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # create an update request with bad request body
+        new_product = resp.get_json()
+        resp = self.app.put(
+            "/api/products/a",
+            json=new_product,
+            content_type="application/json")
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        resp = self.app.put(
+            "/api/products/3.3",
+            json=new_product,
+            content_type="application/json")
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+        test_product = ProductFactory()
+        test_product_name = test_product.name
+        test_product_description = test_product.description
+        test_product_price = test_product.price
+        resp = self.app.post(
+            "/api/products", json=test_product.serialize(), content_type="application/json")
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # update the product
+        new_product = resp.get_json()
+        new_product["price"] = "a"
+        resp = self.app.put(
+            "/api/products/{}".format(new_product["id"]),
+            json=new_product,
+            content_type="application/json")
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_delete_product(self):
         """ Delete a Product """

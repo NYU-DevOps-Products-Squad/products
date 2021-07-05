@@ -1,0 +1,81 @@
+
+Unloadable or unexecutable test.
+
+A Failure case is placed in a test suite to indicate the presence of a
+test that could not be loaded or executed. A common example is a test
+module that fails to import.
+[1;31m- runTest (ERROR)[1;0m
+[1;31m- runTest (ERROR)[1;0m
+======================================================================
+1) ERROR: Failure: ModuleNotFoundError (No module named 'factory')
+----------------------------------------------------------------------
+   Traceback (most recent call last):
+    /home/vagrant/venv/lib/python3.8/site-packages/nose/failure.py line 39 in runTest
+      raise self.exc_val.with_traceback(self.tb)
+    /home/vagrant/venv/lib/python3.8/site-packages/nose/loader.py line 417 in loadTestsFromName
+      module = self.importer.importFromPath(
+    /home/vagrant/venv/lib/python3.8/site-packages/nose/importer.py line 47 in importFromPath
+      return self.importFromDir(dir_path, fqname)
+    /home/vagrant/venv/lib/python3.8/site-packages/nose/importer.py line 94 in importFromDir
+      mod = load_module(part_fqname, fh, filename, desc)
+    /usr/lib/python3.8/imp.py line 234 in load_module
+      return load_source(name, filename, file)
+    /usr/lib/python3.8/imp.py line 171 in load_source
+      module = _load(spec)
+    <frozen importlib._bootstrap> line 702 in _load
+      
+    <frozen importlib._bootstrap> line 671 in _load_unlocked
+      
+    <frozen importlib._bootstrap_external> line 848 in exec_module
+      
+    <frozen importlib._bootstrap> line 219 in _call_with_frames_removed
+      
+    tests/test_models.py line 9 in <module>
+      from .factories import ProductFactory
+    tests/factories.py line 18 in <module>
+      import factory
+   ModuleNotFoundError: No module named 'factory'
+   -------------------- >> begin captured logging << --------------------
+   flask.app: INFO: Initializing database
+   --------------------- >> end captured logging << ---------------------
+======================================================================
+2) ERROR: Failure: ModuleNotFoundError (No module named 'factory')
+----------------------------------------------------------------------
+   Traceback (most recent call last):
+    /home/vagrant/venv/lib/python3.8/site-packages/nose/failure.py line 39 in runTest
+      raise self.exc_val.with_traceback(self.tb)
+    /home/vagrant/venv/lib/python3.8/site-packages/nose/loader.py line 417 in loadTestsFromName
+      module = self.importer.importFromPath(
+    /home/vagrant/venv/lib/python3.8/site-packages/nose/importer.py line 47 in importFromPath
+      return self.importFromDir(dir_path, fqname)
+    /home/vagrant/venv/lib/python3.8/site-packages/nose/importer.py line 94 in importFromDir
+      mod = load_module(part_fqname, fh, filename, desc)
+    /usr/lib/python3.8/imp.py line 234 in load_module
+      return load_source(name, filename, file)
+    /usr/lib/python3.8/imp.py line 171 in load_source
+      module = _load(spec)
+    <frozen importlib._bootstrap> line 702 in _load
+      
+    <frozen importlib._bootstrap> line 671 in _load_unlocked
+      
+    <frozen importlib._bootstrap_external> line 848 in exec_module
+      
+    <frozen importlib._bootstrap> line 219 in _call_with_frames_removed
+      
+    tests/test_routes.py line 14 in <module>
+      from .factories import ProductFactory
+    tests/factories.py line 18 in <module>
+      import factory
+   ModuleNotFoundError: No module named 'factory'
+
+Name                  Stmts   Miss  Cover   Missing
+---------------------------------------------------
+service/__init__.py      25      4    84%   30, 39-42
+service/models.py        74     35    53%   40, 46-49, 55-63, 68-73, 77, 86-96, 111-112, 117-118, 123-124, 133-134
+service/routes.py        42     24    43%   28, 45-53, 65-70, 78-91
+---------------------------------------------------
+TOTAL                   141     63    55%
+-----------------------------------------------------------------------------
+2 tests run in 0.282 seconds. 
+2 errors (0 tests passed)
+

@@ -4,7 +4,6 @@ My Service
 Describe what your service does here
 """
 
-from models import Product
 import os
 import sys
 import logging
@@ -69,6 +68,28 @@ def delete_products(product_id):
         product.delete()
     app.logger.info("Product with id [%s] delete", product_id)
     return make_response(jsonify(message = ''), status.HTTP_204_NO_CONTENT)
+
+######################################################################
+# PURCHASE A product
+######################################################################
+# @app.route("/products/<int:product_id>/purchase", methods=["PUT"])
+# def purchase_products(product_id):
+#     """Purchase a product"""
+#     app.logger.info("Request to purchase product with id %s", product_id)
+#     product = Product.find(product_id)
+#     if not product:
+#         abort(
+#             status.HTTP_404_NOT_FOUND, "product with id '{}' was not found.".format(product_id)
+#         )
+#     if not product.available:
+#         abort(
+#             status.HTTP_400_BAD_REQUEST,
+#             "product with id '{}' is not available.".format(product_id),
+#         )
+#     product.available = False
+#     product.save()
+#     return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
+
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S
 ######################################################################
