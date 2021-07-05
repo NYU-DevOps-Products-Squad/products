@@ -18,7 +18,6 @@ Test Factory to make fake objects for testing
 import factory
 from factory.fuzzy import FuzzyChoice, FuzzyInteger, FuzzyText
 from service.models import Product
-import uuid
 
 class ProductFactory(factory.Factory):
     """ Creates fake pets that you don't have to feed """
@@ -32,7 +31,7 @@ class ProductFactory(factory.Factory):
     inventory = FuzzyInteger(0, 42)
     owner = FuzzyText(length = 5)
     category = FuzzyChoice(choices=["fruit","vegetable"])
-    id = str(uuid.uuid4())
+    id = factory.Sequence(lambda n: n)
 
 
 if __name__ == '__main__':

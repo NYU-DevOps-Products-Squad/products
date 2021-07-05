@@ -1,6 +1,6 @@
+  
 """
 My Service
-
 Describe what your service does here
 """
 
@@ -55,13 +55,25 @@ def update_products(product_id):
 
 @app.route("/products", methods=["GET"])
 def list_product():
-    """ Returns all of the Products """
+    """ Returns all of the products """
     app.logger.info("Request for product list")
     products = []
-    products = Product.all()
+    name = request.args.get('name')
+    price_low = request.args.get("low")
+    price_high = request.args.get("high")
+    owner = request.args.get("owner")
+    if name:
+        products = Product.find_by_name(name).all()
+    elif price_low and price_high:
+        products = Product.find_by_price(price_low, price_high).all()
+    elif owner:
+        products = Product.find_by_owner(owner).all()
+    else:
+        products = Product.all()
 
-    results = [product.serialize() for product in products]
+    results = [Product.serialize() for Product in products]
     return make_response(jsonify(results), status.HTTP_200_OK)
+
 
 ######################################################################
 # RETRIEVE A PRODUCT
