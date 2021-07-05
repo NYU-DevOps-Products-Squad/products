@@ -11,10 +11,11 @@ import logging
 from flask import Flask, jsonify, request, url_for, make_response, abort
 from flask_api import status  # HTTP Status Codes
 
+
 # For this example we'll use SQLAlchemy, a popular ORM that supports a
 # variety of backends including SQLite, MySQL, and PostgreSQL
 from flask_sqlalchemy import SQLAlchemy
-from service.models import import Product, DataValidationError
+from service.models import Product, DataValidationError
 
 # Import Flask application
 from . import app
@@ -26,7 +27,10 @@ from . import app
 def index():
     """ Root URL response """
     return (
-        "Reminder: return some useful information in json format about the service here",
+         jsonify(
+            name="Product Demo REST API Service",
+            version="1.0",
+        ),
         status.HTTP_200_OK,
     )
 
@@ -34,8 +38,7 @@ def index():
 # UPDATE AN EXISTING PRODUCT
 ######################################################################
 @app.route("/products/<string:product_id>", methods=["PUT"])
-@requires_content_type("application/json")
-def update_pets(pet_id):
+def update_products(product_id):
     """
     Update a Product
     This endpoint will update a Product based the body that is posted
@@ -44,7 +47,6 @@ def update_pets(pet_id):
     product = Product.find(product_id)
     if not product:
         app.logger.info("Product with id [%s] was not found.", product_id)
-        api.abort(status.HTTP_404_NOT_FOUND, "Product with id '{}' was not found.".format(product_id))
 
     product.deserialize(request.get_json())
     product.update()
@@ -56,7 +58,7 @@ def update_pets(pet_id):
 # DELETE A PRODUCT
 ######################################################################
 @app.route("/products/<string:product_id>", methods=["DELETE"])
-def delete_pets(pet_id):
+def delete_products(product_id):
     """
     Delete a Product
     This endpoint will delete a Product based the id specified in the path
@@ -73,6 +75,6 @@ def delete_pets(pet_id):
 
 
 def init_db():
-    """ Initialies the SQLAlchemy app """
+    """ Initializes the SQLAlchemy app """
     global app
-    YourResourceModel.init_db(app)
+    Product.init_db(app)

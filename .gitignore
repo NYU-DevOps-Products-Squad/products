@@ -1,3 +1,6 @@
+# pycharm project files
+.idea/
+
 # Local OS metadata
 .DS_Store
 Thumbs.db
