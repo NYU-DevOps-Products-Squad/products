@@ -78,7 +78,7 @@ def list_product():
 ######################################################################
 # RETRIEVE A PRODUCT
 ######################################################################
-@app.route("/products/<string:product_id>", methods=["GET"])
+@app.route("/products/<int:product_id>", methods=["GET"])
 def get_product(product_id):
     """
     Retrieve a single Product
@@ -86,8 +86,12 @@ def get_product(product_id):
     This endpoint will return a Product based on it's id
     """
     app.logger.info("Request for product with id: %s", product_id)
-    product = Product.find(product_id)
-    
+    # product = Product.find(product_id)
+    # if not product:
+    #     raise NotFound("product with id '{}' was not found.".format(product_id))
+
+    product = Product.find_or_404(product_id)
+
     return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
 
 ######################################################################
