@@ -5,6 +5,11 @@ All of the models are stored in this module
 """
 import logging
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from . import app
+
+from sqlalchemy import func
+from sqlalchemy.exc import InvalidRequestError, DataError
 
 logger = logging.getLogger("flask.app")
 
@@ -18,7 +23,7 @@ class DataValidationError(Exception):
     pass
 
 
-class YourResourceModel(db.Model):
+class Product(db.Model):
     """
     Class that represents a <your resource model name>
     """
@@ -27,10 +32,16 @@ class YourResourceModel(db.Model):
 
     # Table Schema
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(63))
+    name = db.Column(db.String(63), nullable=False)
+    description = db.Column(db.String(128), nullable=False)
+    price = db.Column(db.FLOAT(8))
+    inventory = db.Column(db.Integer)
+    owner = db.Column(db.String(63))
+    category =  db.Column(db.String(63))
+
 
     def __repr__(self):
-        return "<YourResourceModel %r id=[%s]>" % (self.name, self.id)
+        return "<<Product> %r id=[%s] %r %f %d %r %r>" % (self.name, self.id, self.description, self.price, self.inventory, self.owner, self.category)
 
     def create(self):
         """
@@ -41,22 +52,38 @@ class YourResourceModel(db.Model):
         db.session.add(self)
         db.session.commit()
 
-    def save(self):
+    def update(self):
         """
         Updates a YourResourceModel to the database
         """
-        logger.info("Saving %s", self.name)
+        logger.info("Updating %s", self.name)
+
+        if not self.id:
+            logger.info("empty ID")
+            raise DataValidationError("empty ID")
         db.session.commit()
 
     def delete(self):
         """ Removes a YourResourceModel from the data store """
         logger.info("Deleting %s", self.name)
         db.session.delete(self)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except InvalidRequestError:
+            db.session.rollback()
 
     def serialize(self):
         """ Serializes a YourResourceModel into a dictionary """
-        return {"id": self.id, "name": self.name}
+        return {
+            "id": self.id, 
+            "name": self.name, 
+            "description" : self.description,
+            "price": self.price,
+            "inventory": self.inventory,
+            "owner": self.owner,
+            "category": self.category
+
+            }
 
     def deserialize(self, data):
         """
@@ -67,6 +94,11 @@ class YourResourceModel(db.Model):
         """
         try:
             self.name = data["name"]
+            self.description = data["description"]
+            self.price = data["price"]
+            self.inventory = data["inventory"]
+            self.owner = data["owner"]
+            self.category = data["category"]
         except KeyError as error:
             raise DataValidationError(
                 "Invalid YourResourceModel: missing " + error.args[0]
