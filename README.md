@@ -12,11 +12,11 @@ Download [Vagrant](https://www.vagrantup.com/)
 Then all you have to do is clone this repo and invoke vagrant to start:
 
 ```bash
-    git clone https://github.com/Devops-2020-Products/products
-    cd products
-    vagrant up
-    vagrant ssh
-    cd /vagrant
+  $ git clone https://github.com/Devops-2020-Products/products
+  $ cd products
+  $ vagrant up
+  $ vagrant ssh
+  $ cd /vagrant
     ...
 ```
 
@@ -56,5 +56,5 @@ When you are done, you should exit the virtual machine and shut down the vm with
 If the VM is no longer needed you can remove it with:
 
 ```bash
-  $ vagrant destroy
+ $ vagrant destroy
 ```
