@@ -8,7 +8,7 @@ import os
 import sys
 import logging
 from flask import Flask, jsonify, request, url_for, make_response, abort
-from flask_api import status  # HTTP Status Codes
+#from flask_api import status  # HTTP Status Codes
 
 
 # For this example we'll use SQLAlchemy, a popular ORM that supports a
@@ -17,7 +17,7 @@ from flask_sqlalchemy import SQLAlchemy
 from service.models import Product, DataValidationError
 from werkzeug.exceptions import NotFound
 # Import Flask application
-from . import app
+from service import app, status  # HTTP Status Codes
 # app.config["APPLICATION_ROOT"] = "/api"
 
 ######################################################################
