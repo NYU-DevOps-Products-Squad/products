@@ -104,6 +104,7 @@ def create_product():
     This endpoint will create a Product based the data in the body that is posted
     """
     app.logger.info("Request to create a product")
+    check_content_type("application/json")
     product = Product()
     product.deserialize(request.get_json())
     product.create()
@@ -175,3 +176,14 @@ def init_db():
     """ Initializes the SQLAlchemy app """
     global app
     Product.init_db(app)
+
+def check_content_type(media_type):
+    """Checks that the media type is correct"""
+    content_type = request.headers.get("Content-Type")
+    if content_type and content_type == media_type:
+        return
+    app.logger.error("Invalid Content-Type: %s", content_type)
+    abort(
+        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+        "Content-Type must be {}".format(media_type),
+    )
