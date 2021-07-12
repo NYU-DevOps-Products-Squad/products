@@ -11,7 +11,7 @@ from unittest.mock import patch
 from unittest.mock import MagicMock, patch
 from urllib.parse import quote_plus
 from flask_api import status  # HTTP Status Codes
-from service.models import db
+from service.models import db, DataValidationError
 from service.routes import app, initialize_logging, init_db
 from .factories import ProductFactory
 
@@ -261,6 +261,16 @@ class TestProductServer(TestCase):
                 new_product["inventory"], test_product.inventory, "Inventory does not match"
             )
 
+    def test_create_product_no_data(self):
+        """ Create a Product with missing data """
+        resp = self.app.post(
+            "/products", json={}, content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_create_product_no_content_type(self):
+        """ Create a Product with no content type """
+        resp = self.app.post("/products")
+        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
 
