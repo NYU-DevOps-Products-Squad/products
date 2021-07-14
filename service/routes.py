@@ -8,7 +8,6 @@ import os
 import sys
 import logging
 from flask import Flask, jsonify, request, url_for, make_response, abort
-#from flask_api import status  # HTTP Status Codes
 
 
 # For this example we'll use SQLAlchemy, a popular ORM that supports a
@@ -44,6 +43,7 @@ def update_products(product_id):
     This endpoint will update a Product based the body that is posted
     """
     app.logger.info("Request to update Product with id %s", product_id)
+    check_content_type("application/json")
     product = Product.find(product_id)
     if not product:
         raise NotFound("Product with id %d was not found." % product_id)
@@ -77,6 +77,7 @@ def delete_products(product_id):
 def purchase_products(product_id):
     """Purchase a product"""
     app.logger.info("Request to purchase product with id %s", product_id)
+    check_content_type("application/json")
     product = Product.find(product_id)
     if not product:
         abort(
@@ -120,6 +121,7 @@ def create_product():
     This endpoint will create a product based the data in the body that is posted
     """
     app.logger.info("Request to create a product")
+    check_content_type("application/json")
     product = Product()
     product.deserialize(request.get_json())
     product.create()
@@ -159,3 +161,10 @@ def init_db():
     """ Initializes the SQLAlchemy app """
     global app
     Product.init_db(app)
+
+def check_content_type(content_type):
+    """ Checks that the media type is correct """
+    if request.headers["Content-Type"] == content_type:
+        return
+    app.logger.error("Invalid Content-Type: %s", request.headers["Content-Type"])
+    abort(415, "Content-Type must be {}".format(content_type))

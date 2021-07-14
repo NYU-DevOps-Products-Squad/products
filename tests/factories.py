@@ -32,7 +32,7 @@ class ProductFactory(factory.Factory):
     inventory = FuzzyInteger(0, 42)
     owner = FuzzyText(length = 5)
     category = FuzzyChoice(choices=["fruit","vegetable"])
-    id = str(uuid.uuid4())
+    id = None
 
 
 if __name__ == '__main__':

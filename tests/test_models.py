@@ -6,6 +6,7 @@ import unittest
 import os
 from service import app
 from service.models import Product, DataValidationError, db
+from werkzeug.exceptions import NotFound
 from .factories import ProductFactory
 from unittest.mock import patch
 from sqlalchemy.exc import InvalidRequestError
@@ -94,4 +95,31 @@ class TestProduct(unittest.TestCase):
             commit.side_effect = InvalidRequestError
             product.delete()
             self.assertEqual(len(Product.all()), 1)
+            
+    def test_find_or_404_found(self):
+        """Find or return 404 found"""
+        products = ProductFactory.create_batch(3)
+        for product in products:
+            product.create()
+
+        product = Product.find_or_404(products[1].id)
+        self.assertIsNot(product, None)
+        self.assertEqual(product.id, products[1].id)
+        self.assertEqual(product.name, products[1].name)
+
+    def test_find_or_404_not_found(self):
+        """Find or return 404 NOT found"""
+        self.assertRaises(NotFound, Product.find_or_404, 0)
+
+    def test_deserialize_missing_data(self):
+        """Test deserialization of a Product with missing data"""
+        data = {"id": 1, "name":"iPhone 12 Pro Max", "description":"iPhone 12 Pro Max purple", "category": "Technology"}
+        product = Product()
+        self.assertRaises(DataValidationError, product.deserialize, data)
+
+    def test_deserialize_bad_data(self):
+        """Test deserialization of bad data"""
+        data = "this is not a dictionary"
+        product = Product()
+        self.assertRaises(DataValidationError, product.deserialize, data)
 

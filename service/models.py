@@ -5,7 +5,6 @@ All of the models are stored in this module
 """
 import logging
 from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
 from . import app
 
 from sqlalchemy import func
@@ -101,11 +100,11 @@ class Product(db.Model):
             self.category = data["category"]
         except KeyError as error:
             raise DataValidationError(
-                "Invalid YourResourceModel: missing " + error.args[0]
+                "Invalid ProductModel: missing " + error.args[0]
             )
-        except TypeError as error:
+        except TypeError:
             raise DataValidationError(
-                "Invalid YourResourceModel: body of request contained bad or no data"
+                "Invalid ProductModel: body of request contained bad or no data"
             )
         return self
 
@@ -137,12 +136,3 @@ class Product(db.Model):
         logger.info("Processing lookup or 404 for id %s ...", by_id)
         return cls.query.get_or_404(by_id)
 
-    @classmethod
-    def find_by_name(cls, name):
-        """Returns all YourResourceModels with the given name
-
-        Args:
-            name (string): the name of the YourResourceModels you want to match
-        """
-        logger.info("Processing name query for %s ...", name)
-        return cls.query.filter(cls.name == name)
