@@ -20,3 +20,4 @@ script: nosetests
 
 after_success:
   - codecov
+
