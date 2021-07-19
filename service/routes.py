@@ -8,7 +8,7 @@ import os
 import sys
 import logging
 from flask import Flask, jsonify, request, url_for, make_response, abort
-from flask_api import status  # HTTP Status Codes
+
 
 
 # For this example we'll use SQLAlchemy, a popular ORM that supports a
@@ -17,7 +17,7 @@ from flask_sqlalchemy import SQLAlchemy
 from service.models import Product, DataValidationError
 from werkzeug.exceptions import NotFound
 # Import Flask application
-from . import app
+from service import app, status  # HTTP Status Codes
 # app.config["APPLICATION_ROOT"] = "/api"
 
 ######################################################################
@@ -44,6 +44,7 @@ def update_products(product_id):
     This endpoint will update a Product based the body that is posted
     """
     app.logger.info("Request to update Product with id %s", product_id)
+    check_content_type("application/json")
     product = Product.find(product_id)
     if not product:
         raise NotFound("Product with id %d was not found." % product_id)
@@ -53,6 +54,10 @@ def update_products(product_id):
     app.logger.info("Product with id [%d] updated.", product.id)
     return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
 
+
+######################################################################
+# LIST PRODUCT
+######################################################################
 @app.route("/products", methods=["GET"])
 def list_product():
     """ Returns all of the products """
@@ -139,13 +144,13 @@ def delete_products(product_id):
 def purchase_products(product_id):
     """Purchase a product"""
     app.logger.info("Request to purchase product with id %s", product_id)
+    check_content_type("application/json")
     product = Product.find(product_id)
     if not product:
         abort(
             status.HTTP_404_NOT_FOUND, "product with id '{}' was not found.".format(product_id)
         )
     return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
-
 
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S

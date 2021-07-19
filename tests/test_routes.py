@@ -9,11 +9,15 @@ import logging
 from unittest import TestCase, mock
 from unittest.mock import patch
 from unittest.mock import MagicMock, patch
-from urllib.parse import quote_plus
-from flask_api import status  # HTTP Status Codes
-from service.models import db, DataValidationError
+from service import app, status  # HTTP Status Codes
+from service.models import db, Product, DataValidationError
 from service.routes import app, initialize_logging, init_db
 from .factories import ProductFactory
+from service.error_handlers import internal_server_error
+from sqlalchemy.exc import InvalidRequestError
+
+from urllib.parse import quote_plus
+
 
 ######################################################################
 #  T E S T   C A S E S
@@ -94,7 +98,6 @@ class TestProductServer(TestCase):
         data = resp.get_json()
         self.assertEqual(len(data), 5)
 
-
     def test_get_product(self):
         """ Get a single product """
         # get the id of a product
@@ -153,6 +156,16 @@ class TestProductServer(TestCase):
         resp = self.app.get("/products/{}".format(test_product.id), content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_delete_a_product_commit_error(self):
+        """ Delete a Product """
+        product = Product(name="iPhone X", description="Black iPhone", category="Technology", price=999.99)
+        product.create()
+        self.assertEqual(len(Product.all()), 1)
+        # delete the product and make sure it isn't in the database
+        with patch('service.models.db.session.commit') as commit:
+            commit.side_effect = InvalidRequestError
+            product.delete()
+            self.assertEqual(len(Product.all()), 1)
 
     def test_purchase_a_product(self):
         """Purchase a product"""
@@ -169,6 +182,44 @@ class TestProductServer(TestCase):
         resp = self.app.get("/products/2", content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_data_validation_error(self):
+        '''Data Validation Error '''
+        test_product = ProductFactory()
+        data = test_product.serialize()
+        data.pop('name', None)
+        resp = self.app.post(
+            "/products", json=data, content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(b'Bad Request', resp.data)
+
+    def test_404_not_found_error(self):
+        '''Resources Not Found Error '''
+        resp = self.app.get("/products/{}")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertIn(b'Not Found', resp.data)
+
+    def test_method_not_allowed_error(self):
+        '''Test Method Not Allowed Error '''
+        resp = self.app.post("/")
+        self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertIn(b'Method not Allowed', resp.data)
+
+    def test_unsupported_media_type_error(self):
+        '''Unsupported Media Requests '''
+        test_product = ProductFactory()
+        data = test_product.serialize()
+        resp = self.app.post(
+            "/products", json=data, content_type="text/javascript"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+        self.assertIn(b'Content-Type must be application/json', resp.data)
+
+    def test_internal_server_error(self):
+        '''Internal Server Error '''
+        resp = internal_server_error("internal serval error")
+        self.assertEqual(resp[1], status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
     def test_query_product_list_by_name(self):
         """ Query Products by Name """
         products = self._create_products(10)
@@ -272,5 +323,4 @@ class TestProductServer(TestCase):
         """ Create a Product with no content type """
         resp = self.app.post("/products")
         self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
-
 

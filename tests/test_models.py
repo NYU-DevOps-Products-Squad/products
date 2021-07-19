@@ -17,9 +17,7 @@ DATABASE_URI = os.getenv(
 
 ######################################################################
 #  P R O D U C T   M O D E L   T E S T   C A S E S
-######################################################################
-
-
+#####################################################################
 class TestProduct(unittest.TestCase):
     """ Test Cases for Product Model """
 
@@ -97,6 +95,21 @@ class TestProduct(unittest.TestCase):
             commit.side_effect = InvalidRequestError
             product.delete()
             self.assertEqual(len(Product.all()), 1)
+            
+    def test_find_or_404_found(self):
+        """Find or return 404 found"""
+        products = ProductFactory.create_batch(3)
+        for product in products:
+            product.create()
+
+        product = Product.find_or_404(products[1].id)
+        self.assertIsNot(product, None)
+        self.assertEqual(product.id, products[1].id)
+        self.assertEqual(product.name, products[1].name)
+
+    def test_find_or_404_not_found(self):
+        """Find or return 404 NOT found"""
+        self.assertRaises(NotFound, Product.find_or_404, 0)
 
     def test_find_by_name(self):
         """ Find products by Name """
