@@ -10,12 +10,13 @@ from unittest import TestCase, mock
 from unittest.mock import patch
 from unittest.mock import MagicMock, patch
 from service import app, status  # HTTP Status Codes
-from service.models import db, Product
+from service.models import db, Product, DataValidationError
 from service.routes import app, initialize_logging, init_db
 from .factories import ProductFactory
 from service.error_handlers import internal_server_error
 from sqlalchemy.exc import InvalidRequestError
 
+from urllib.parse import quote_plus
 
 
 ######################################################################
@@ -39,7 +40,6 @@ class TestProductServer(TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        """ This runs once after the entire test suite """
         pass
 
     def setUp(self):
@@ -59,21 +59,20 @@ class TestProductServer(TestCase):
         products = []
         for _ in range(count):
             test_product = ProductFactory()
-            # test_product_name = test_product.name
-            # test_product_description = test_product.description
-            # test_product_price = test_product.price
             resp = self.app.post(
-                "/products", json=test_product.serialize(), content_type="application/json")
-            self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+                "/products", json=test_product.serialize(), content_type="application/json"
+            )
+            self.assertEqual(
+                resp.status_code, status.HTTP_201_CREATED, "Could not create test product"
+            )
             new_product = resp.get_json()
             test_product.id = new_product["id"]
             products.append(test_product)
         return products
-
     ######################################################################
     #  P L A C E   T E S T   C A S E S   H E R E
     ######################################################################
-
+    
     def test_index(self):
         """ Test the Home Page """
         resp = self.app.get("/")
@@ -92,7 +91,7 @@ class TestProductServer(TestCase):
         # self.assertRaises(Exception, importlib.reload, "service")
 
     def test_get_product_list(self):
-        """ Get a list of products """
+        """ Get a list of Products """
         self._create_products(5)
         resp = self.app.get("/products")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -168,7 +167,6 @@ class TestProductServer(TestCase):
             product.delete()
             self.assertEqual(len(Product.all()), 1)
 
-
     def test_purchase_a_product(self):
         """Purchase a product"""
         self._create_products(2)
@@ -221,3 +219,108 @@ class TestProductServer(TestCase):
         '''Internal Server Error '''
         resp = internal_server_error("internal serval error")
         self.assertEqual(resp[1], status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    def test_query_product_list_by_name(self):
+        """ Query Products by Name """
+        products = self._create_products(10)
+        test_name = products[0].name
+        name_products = [product for product in products if product.name == test_name]
+        resp = self.app.get(
+            "/products", query_string="name={}".format(quote_plus(test_name))
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), len(name_products))
+        # check the data just to be sure
+        for product in data:
+            self.assertEqual(product["name"], test_name)
+
+    def test_query_product_list_by_price(self):
+        """ Query Products by Price """
+        products = self._create_products(10)
+        test_price_low = 30
+        test_price_high = 100
+        price_products = [product for product in products if product.price >= test_price_low and product.price <= test_price_high]
+        resp = self.app.get(
+            "/products", query_string=("low={}&high={}".format(test_price_low,test_price_high))
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), len(price_products))
+        # check the data just to be sure
+        for product in data:
+            self.assertTrue(product["price"] >= test_price_low)
+            self.assertTrue(product["price"] <= test_price_high)
+
+    def test_query_product_list_by_owner(self):
+        """ Query Products by Owner """
+        products = self._create_products(10)
+        test_owner = products[0].owner
+        owner_products = [product for product in products if product.owner == test_owner]
+        resp = self.app.get(
+            "/products", query_string="owner={}".format(quote_plus(test_owner))
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), len(owner_products))
+        # check the data just to be sure
+        for product in data:
+            self.assertEqual(product["owner"], test_owner)
+            
+
+    def test_create_product(self):
+            """ Create a new Product """
+            test_product = ProductFactory()
+            logging.debug(test_product)
+            resp = self.app.post(
+                "/products", json=test_product.serialize(), content_type="application/json"
+            )
+            self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+            # Make sure location header is set
+            location = resp.headers.get("Location", None)
+            self.assertIsNotNone(location)
+            # Check the data is correct
+            new_product = resp.get_json()
+            self.assertEqual(new_product["name"], test_product.name, "Names do not match")
+            self.assertEqual(
+                new_product["category"], test_product.category, "Categories do not match"
+            )
+            self.assertEqual(
+                new_product["description"], test_product.description, "Description does not match"
+            )
+            self.assertEqual(
+                new_product["price"], test_product.price, "Price does not match"
+            )
+            self.assertEqual(
+                new_product["inventory"], test_product.inventory, "Inventory does not match"
+            )
+            # Check that the location header was correct
+            resp = self.app.get(location, content_type="application/json")
+            self.assertEqual(resp.status_code, status.HTTP_200_OK)
+            new_product = resp.get_json()
+            self.assertEqual(new_product["name"], test_product.name, "Names do not match")
+            self.assertEqual(
+                new_product["category"], test_product.category, "Categories do not match"
+            )
+            self.assertEqual(
+                new_product["description"], test_product.description, "Availability does not match"
+            )
+            self.assertEqual(
+                new_product["price"], test_product.price, "Price does not match"
+            )
+            self.assertEqual(
+                new_product["inventory"], test_product.inventory, "Inventory does not match"
+            )
+
+    def test_create_product_no_data(self):
+        """ Create a Product with missing data """
+        resp = self.app.post(
+            "/products", json={}, content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_product_no_content_type(self):
+        """ Create a Product with no content type """
+        resp = self.app.post("/products")
+        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+

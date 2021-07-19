@@ -1,6 +1,6 @@
+  
 """
 My Service
-
 Describe what your service does here
 """
 
@@ -8,6 +8,7 @@ import os
 import sys
 import logging
 from flask import Flask, jsonify, request, url_for, make_response, abort
+
 
 
 # For this example we'll use SQLAlchemy, a popular ORM that supports a
@@ -55,6 +56,72 @@ def update_products(product_id):
 
 
 ######################################################################
+# LIST PRODUCT
+######################################################################
+@app.route("/products", methods=["GET"])
+def list_product():
+    """ Returns all of the products """
+    app.logger.info("Request for product list")
+    products = []
+    name = request.args.get('name')
+    price_low = request.args.get("low")
+    price_high = request.args.get("high")
+    owner = request.args.get("owner")
+    if name:
+        products = Product.find_by_name(name).all()
+    elif price_low and price_high:
+        products = Product.find_by_price(price_low, price_high).all()
+    elif owner:
+        products = Product.find_by_owner(owner).all()
+    else:
+        products = Product.all()
+
+    results = [Product.serialize() for Product in products]
+    return make_response(jsonify(results), status.HTTP_200_OK)
+
+
+######################################################################
+# RETRIEVE A PRODUCT
+######################################################################
+@app.route("/products/<int:product_id>", methods=["GET"])
+def get_product(product_id):
+    """
+    Retrieve a single Product
+
+    This endpoint will return a Product based on it's id
+    """
+    app.logger.info("Request for product with id: %s", product_id)
+    # product = Product.find(product_id)
+    # if not product:
+    #     raise NotFound("product with id '{}' was not found.".format(product_id))
+
+    product = Product.find_or_404(product_id)
+
+    return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
+
+######################################################################
+# ADD A NEW PRODUCT
+######################################################################
+@app.route("/products", methods=["POST"])
+def create_product():
+    """
+    Creates a Product
+    This endpoint will create a Product based the data in the body that is posted
+    """
+    app.logger.info("Request to create a product")
+    check_content_type("application/json")
+    product = Product()
+    product.deserialize(request.get_json())
+    product.create()
+    message = product.serialize()
+    location_url = url_for("get_product", product_id=product.id, _external=True)
+    return make_response(
+        jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
+    )
+
+
+
+######################################################################
 # DELETE A PRODUCT
 ######################################################################
 @app.route("/products/<int:product_id>", methods=["DELETE"])
@@ -84,53 +151,6 @@ def purchase_products(product_id):
             status.HTTP_404_NOT_FOUND, "product with id '{}' was not found.".format(product_id)
         )
     return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
-
-@app.route("/products", methods=["GET"])
-def list_product():
-    """ Returns all of the products """
-    app.logger.info("Request for product list")
-    products = []
-    products = Product.all()
-
-    results = [product.serialize() for product in products]
-    return make_response(jsonify(results), status.HTTP_200_OK)
-
-######################################################################
-# RETRIEVE A product
-######################################################################
-@app.route("/products/<int:product_id>", methods=["GET"])
-def get_product(product_id):
-    """
-    Retrieve a single product
-
-    This endpoint will return a product based on it's id
-    """
-    app.logger.info("Request for product with id: %s", product_id)
-    product = Product.find(product_id)
-    if not product:
-        raise NotFound("product with id '{}' was not found.".format(product_id))
-    return product.serialize(), status.HTTP_200_OK
-
-######################################################################
-# ADD A NEW product
-######################################################################
-@app.route("/products", methods=["POST"])
-def create_product():
-    """
-    Creates a product
-    This endpoint will create a product based the data in the body that is posted
-    """
-    app.logger.info("Request to create a product")
-    check_content_type("application/json")
-    product = Product()
-    product.deserialize(request.get_json())
-    product.create()
-    message = product.serialize()
-    location_url = url_for("get_product", product_id=product.id, _external=True)
-    return make_response(
-        jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
-    )
-
 
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S
@@ -162,9 +182,13 @@ def init_db():
     global app
     Product.init_db(app)
 
-def check_content_type(content_type):
-    """ Checks that the media type is correct """
-    if request.headers["Content-Type"] == content_type:
+def check_content_type(media_type):
+    """Checks that the media type is correct"""
+    content_type = request.headers.get("Content-Type")
+    if content_type and content_type == media_type:
         return
-    app.logger.error("Invalid Content-Type: %s", request.headers["Content-Type"])
-    abort(415, "Content-Type must be {}".format(content_type))
+    app.logger.error("Invalid Content-Type: %s", content_type)
+    abort(
+        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+        "Content-Type must be {}".format(media_type),
+    )

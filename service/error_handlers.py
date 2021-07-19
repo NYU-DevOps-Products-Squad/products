@@ -1,6 +1,8 @@
 from flask import jsonify
 from service.models import DataValidationError
 from . import app, status
+from flask_api import status  # HTTP Status Codes
+
 
 ######################################################################
 # Error Handlers
@@ -23,6 +25,7 @@ def bad_request(error):
         ),
         status.HTTP_400_BAD_REQUEST,
     )
+
 
 @app.errorhandler(status.HTTP_404_NOT_FOUND)
 def not_found(error):
