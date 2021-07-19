@@ -14,9 +14,11 @@ env:
 
 before_script:
   - psql -c 'create database testdb;' -U postgres
-
+  
+after_success:
+ - codecov
+ 
 # command to run tests
 script: nosetests
 
-after_success:
- - codecov
+
