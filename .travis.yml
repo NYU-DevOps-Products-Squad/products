@@ -19,4 +19,4 @@ before_script:
 script: nosetests
 
 after_success:
- - codecov
+  - codecov
