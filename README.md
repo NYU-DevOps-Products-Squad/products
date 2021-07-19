@@ -1,5 +1,7 @@
 # products
 [![Build Status](https://travis-ci.com/NYU-DevOps-Products-Squad/products.svg?branch=main)](https://travis-ci.com/NYU-DevOps-Products-Squad/products)
+[![codecov](https://codecov.io/gh/NYU-DevOps-Products-Squad/products/branch/main/graph/badge.svg?token=5NJ1GINBW6)](https://codecov.io/gh/NYU-DevOps-Products-Squad/products)
+
 Repo for the products team or NYU DevOps 2021 summer
 
 
