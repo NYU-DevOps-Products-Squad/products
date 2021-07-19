@@ -1,4 +1,5 @@
 # products
+[![Build Status](https://www.travis-ci.com/NYU-DevOps-Products-Squad/products.svg?branch=main)](https://www.travis-ci.com/NYU-DevOps-Products-Squad/products)
 Repo for the products team or NYU DevOps 2021 summer
 
 ## Prerequisite Installation using Vagrant VM
