@@ -15,22 +15,3 @@ Scenario: The server is running
     When I visit the "Home Page"
     Then I should see "Product RESTful Service" in the title
     And I should not see "404 Not Found"
-
-Scenario: Update a Product
-    When I visit the "Home Page"
-    And I set the "Search_Name" to "iPhone 12"
-    And I press the "Search" button
-    Then I should see "iPhone 12" in the "Name" field
-    And I should see "Tech" in the "Category" field
-    When I change "Name" to "iPhone X"
-    And I press the "Update" button
-    Then I should see the message "Product has been Updated!"
-    When I copy the "ID" field
-    And I press the "Clear" button
-    And I paste the "ID" field
-    And I press the "Retrieve" button
-    Then I should see "iPhone X" in the "Name" field
-    When I press the "Clear" button
-    And I press the "Search" button
-    Then I should see "iPhone X" in the results
-    Then I should not see "iPhone 12" in the results
