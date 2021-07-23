@@ -26,13 +26,14 @@ from service import app, status  # HTTP Status Codes
 @app.route("/")
 def index():
     """ Root URL response """
-    return (
-         jsonify(
-            name="Product Demo REST API Service",
-            version="1.0",
-        ),
-        status.HTTP_200_OK,
-    )
+    # return (
+    #      jsonify(
+    #         name="Product Demo REST API Service",
+    #         version="1.0",
+    #     ),
+    #     status.HTTP_200_OK,
+    # )
+    return app.send_static_file("index.html")
 
 ######################################################################
 # UPDATE AN EXISTING PRODUCT
