@@ -77,8 +77,7 @@ class TestProductServer(TestCase):
         """ Test the Home Page """
         resp = self.app.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        data = resp.get_json()
-        self.assertEqual(data["name"],"Product Demo REST API Service")
+        self.assertIn(b"Peoduct Demo REST API Service", resp.data)
     
     @mock.patch('service.routes.init_db', side_effect=Exception())
     def test_init_exception(self, service_init_mock):
