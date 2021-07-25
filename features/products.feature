@@ -4,7 +4,7 @@ Feature: The product management service back-end
     So that I can keep track of all my products
 
 Background:
-    Given the following pets
+    Given the following products
         | name     | description    | price   | inventory | owner | category |
         | iPhone12 | Black iPhone12 | 999.99  | 10        | Alice | Tech     |
         | iPad     | iPad Air2      | 1099.99 | 20        | Bob   | Tech     |
