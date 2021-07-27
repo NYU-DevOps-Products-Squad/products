@@ -128,6 +128,7 @@ $(function () {
         })
 
         ajax.done(function(res){
+            
             var product = res[0];
             $("#product_id").val(product.id);
             $("#product_name").val(product.name);
