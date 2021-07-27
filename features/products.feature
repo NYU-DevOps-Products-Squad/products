@@ -66,5 +66,3 @@ Scenario: Search all products owned by sun
     And I should not see "dog" in the results
     And I should not see "book" in the results
 
-
-
