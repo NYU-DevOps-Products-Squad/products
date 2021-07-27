@@ -57,7 +57,6 @@ def step_impl(context, element_name, text_string):
     element.clear()
     element.send_keys(text_string)
 
-
 @then('the "{element_name}" field should be empty')
 def step_impl(context, element_name):
     element_id = ID_PREFIX + element_name.lower()
