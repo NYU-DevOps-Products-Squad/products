@@ -68,12 +68,19 @@ def list_product():
     price_low = request.args.get("low")
     price_high = request.args.get("high")
     owner = request.args.get("owner")
+    category = request.args.get("category")
     if name:
+        app.logger.info("Find by name: %s", name)
         products = Product.find_by_name(name).all()
     elif price_low and price_high:
+        app.logger.info("Find by price from %s to %s", price_low, price_high)
         products = Product.find_by_price(price_low, price_high).all()
     elif owner:
+        app.logger.info("Find by owner: %s", owner)
         products = Product.find_by_owner(owner).all()
+    elif category:
+        app.logger.info("Find by category: %s", category)
+        products = Product.find_by_category(category).all()
     else:
         products = Product.all()
 
