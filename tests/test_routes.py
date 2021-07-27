@@ -111,6 +111,10 @@ class TestProductServer(TestCase):
         # print the repr of a product
         rep = "%s" % test_product
 
+    def test_get_product_not_found(self):
+        """Get a Product thats not found"""
+        resp = self.app.get("/products/0")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_update_product(self):
         """ Update an existing Product """
@@ -266,6 +270,20 @@ class TestProductServer(TestCase):
         for product in data:
             self.assertEqual(product["owner"], test_owner)
             
+    def test_query_product_list_by_category(self):
+        """ Query Products by Category """
+        products = self._create_products(10)
+        test_category = products[0].category
+        category_products = [product for product in products if product.category == test_category]
+        resp = self.app.get(
+            "/products", query_string="category={}".format(quote_plus(test_category))
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), len(category_products))
+        # check the data just to be sure
+        for product in data:
+            self.assertEqual(product["category"], test_category)
 
     def test_create_product(self):
             """ Create a new Product """
