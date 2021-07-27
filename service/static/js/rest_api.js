@@ -6,21 +6,23 @@ $(function () {
 
     // Updates the form with data from the response
     function update_form_data(res) {
-        $("#pet_id").val(res._id);
-        $("#pet_name").val(res.name);
-        $("#pet_category").val(res.category);
-        if (res.available == true) {
-            $("#pet_available").val("true");
-        } else {
-            $("#pet_available").val("false");
-        }
+        $("#product_id").val(res.id);
+        $("#product_name").val(res.name);
+        $("#product_description").val(res.description);
+        $("#product_price").val(res.price);
+        $("#product_inventory").val(res.inventory);
+        $("#product_owner").val(res.owner);
+        $("#product_category").val(res.category);
     }
 
     /// Clears all form fields
     function clear_form_data() {
-        $("#pet_name").val("");
-        $("#pet_category").val("");
-        $("#pet_available").val("");
+        $("#product_name").val("");
+        $("#product_description").val("");
+        $("#product_price").val("");
+        $("#product_inventory").val("");
+        $("#product_owner").val("");
+        $("#product_category").val("");
     }
 
     // Updates the flash message area
@@ -30,24 +32,30 @@ $(function () {
     }
 
     // ****************************************
-    // Create a Pet
+    // Create a Product
     // ****************************************
 
     $("#create-btn").click(function () {
 
-        var name = $("#pet_name").val();
-        var category = $("#pet_category").val();
-        var available = $("#pet_available").val() == "true";
+        var name = $("#product_name").val();
+        var description = $("#product_description").val();
+        var price = $("#product_price").val();
+        var inventory = $("#product_inventory").val();
+        var owner = $("#product_owner").val();
+        var category = $("#product_category").val();
 
         var data = {
             "name": name,
-            "category": category,
-            "available": available
+            "description": description,
+            "price": price,
+            "inventory": inventory,
+            "owner": owner,
+            "category": category
         };
 
         var ajax = $.ajax({
             type: "POST",
-            url: "/pets",
+            url: "/products",
             contentType: "application/json",
             data: JSON.stringify(data),
         });
@@ -62,53 +70,17 @@ $(function () {
         });
     });
 
-
     // ****************************************
-    // Update a Pet
-    // ****************************************
-
-    $("#update-btn").click(function () {
-
-        var pet_id = $("#pet_id").val();
-        var name = $("#pet_name").val();
-        var category = $("#pet_category").val();
-        var available = $("#pet_available").val() == "true";
-
-        var data = {
-            "name": name,
-            "category": category,
-            "available": available
-        };
-
-        var ajax = $.ajax({
-                type: "PUT",
-                url: "/pets/" + pet_id,
-                contentType: "application/json",
-                data: JSON.stringify(data)
-            })
-
-        ajax.done(function(res){
-            update_form_data(res)
-            flash_message("Success")
-        });
-
-        ajax.fail(function(res){
-            flash_message(res.responseJSON.message)
-        });
-
-    });
-
-    // ****************************************
-    // Retrieve a Pet
+    // Retrieve a Product
     // ****************************************
 
     $("#retrieve-btn").click(function () {
 
-        var pet_id = $("#pet_id").val();
+        var product_id = $("#product_id").val();
 
         var ajax = $.ajax({
             type: "GET",
-            url: "/pets/" + pet_id,
+            url: "/products/" + product_id,
             contentType: "application/json",
             data: ''
         })
@@ -124,31 +96,6 @@ $(function () {
             flash_message(res.responseJSON.message)
         });
 
-    });
-
-    // ****************************************
-    // Delete a Pet
-    // ****************************************
-
-    $("#delete-btn").click(function () {
-
-        var pet_id = $("#pet_id").val();
-
-        var ajax = $.ajax({
-            type: "DELETE",
-            url: "/pets/" + pet_id,
-            contentType: "application/json",
-            data: '',
-        })
-
-        ajax.done(function(res){
-            clear_form_data()
-            flash_message("Pet has been Deleted!")
-        });
-
-        ajax.fail(function(res){
-            flash_message("Server error!")
-        });
     });
 
     // ****************************************
@@ -156,81 +103,49 @@ $(function () {
     // ****************************************
 
     $("#clear-btn").click(function () {
-        $("#pet_id").val("");
+        $("#product_id").val("");
         clear_form_data()
     });
 
     // ****************************************
-    // Search for a Pet
+    // Read a Product
     // ****************************************
 
-    $("#search-btn").click(function () {
-
-        var name = $("#pet_name").val();
-        var category = $("#pet_category").val();
-        var available = $("#pet_available").val() == "true";
+    $("#read-btn").click(function (){
+        var name = $("#product_name").val();
 
         var queryString = ""
 
         if (name) {
             queryString += 'name=' + name
         }
-        if (category) {
-            if (queryString.length > 0) {
-                queryString += '&category=' + category
-            } else {
-                queryString += 'category=' + category
-            }
-        }
-        if (available) {
-            if (queryString.length > 0) {
-                queryString += '&available=' + available
-            } else {
-                queryString += 'available=' + available
-            }
-        }
 
         var ajax = $.ajax({
             type: "GET",
-            url: "/pets?" + queryString,
+            url: "/products?" + queryString,
             contentType: "application/json",
             data: ''
         })
 
         ajax.done(function(res){
-            //alert(res.toSource())
-            $("#search_results").empty();
-            $("#search_results").append('<table class="table-striped" cellpadding="10">');
-            var header = '<tr>'
-            header += '<th style="width:10%">ID</th>'
-            header += '<th style="width:40%">Name</th>'
-            header += '<th style="width:40%">Category</th>'
-            header += '<th style="width:10%">Available</th></tr>'
-            $("#search_results").append(header);
-            var firstPet = "";
-            for(var i = 0; i < res.length; i++) {
-                var pet = res[i];
-                var row = "<tr><td>"+pet._id+"</td><td>"+pet.name+"</td><td>"+pet.category+"</td><td>"+pet.available+"</td></tr>";
-                $("#search_results").append(row);
-                if (i == 0) {
-                    firstPet = pet;
-                }
-            }
-
-            $("#search_results").append('</table>');
-
-            // copy the first result to the form
-            if (firstPet != "") {
-                update_form_data(firstPet)
-            }
-
+            var product = res[0];
+            $("#product_id").val(product.id);
+            $("#product_name").val(product.name);
+            $("#product_description").val(product.description);
+            $("#product_price").val(product.price);
+            $("#product_inventory").val(product.inventory);
+            $("#product_owner").val(product.owner);
+            $("#product_category").val(product.category);
             flash_message("Success")
         });
 
         ajax.fail(function(res){
+            clear_form_data()
             flash_message(res.responseJSON.message)
         });
 
     });
+
+
 
 })

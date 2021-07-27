@@ -1,3 +1,19 @@
+######################################################################
+# Copyright 2016, 2021 John J. Rofrano. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+######################################################################
+
 """
 Web Steps
 
@@ -40,17 +56,6 @@ def step_impl(context, element_name, text_string):
     element.clear()
     element.send_keys(text_string)
 
-@when('I select "{text}" in the "{element_name}" dropdown')
-def step_impl(context, text, element_name):
-    element_id = ID_PREFIX + element_name.lower()
-    element = Select(context.driver.find_element_by_id(element_id))
-    element.select_by_visible_text(text)
-
-@then('I should see "{text}" in the "{element_name}" dropdown')
-def step_impl(context, text, element_name):
-    element_id = ID_PREFIX + element_name.lower()
-    element = Select(context.driver.find_element_by_id(element_id))
-    expect(element.first_selected_option.text).to_equal(text)
 
 @then('the "{element_name}" field should be empty')
 def step_impl(context, element_name):
