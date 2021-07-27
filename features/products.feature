@@ -44,7 +44,7 @@ Scenario: Create a Product
 Scenario: Read a Product
     When I visit the "Home Page" 
     And I set the "Name" to "apple"
-    And I press the "Read" button
+    And I press the "Search" button
     Then I should see the message "Success"
     When I copy the "Id" field
     And I press the "Clear" button
