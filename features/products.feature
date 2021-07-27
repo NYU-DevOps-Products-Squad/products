@@ -17,6 +17,22 @@ Scenario: The server is running
     Then I should see "Product Demo REST API Service" in the title
     And I should not see "404 Not Found"
 
+Scenario: Update a Product
+    When I visit the "Home Page"
+    And I set the "Name" to "peach"
+    And I press the "Search" button
+    Then I should see "peach" in the "Name" field
+    And I should see "fruit" in the "Category" field
+    When I change "Name" to "pear"
+    And I press the "Update" button
+    Then I should see the message "Success"
+    When I copy the "ID" field
+    And I press the "Clear" button
+    And I paste the "ID" field
+    And I press the "Retrieve" button
+    Then I should see "pear" in the "Name" field
+
+
 Scenario: List all products
     When I visit the "Home Page"
     And I press the "Search" button
