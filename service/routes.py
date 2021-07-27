@@ -38,7 +38,7 @@ def index():
 ######################################################################
 # UPDATE AN EXISTING PRODUCT
 ######################################################################
-@app.route("/products/<int:product_id>", methods=["PUT"])
+@app.route("/products/<product_id>", methods=["PUT"])
 def update_products(product_id):
     """
     Update a Product
@@ -55,6 +55,9 @@ def update_products(product_id):
     app.logger.info("Product with id [%d] updated.", product.id)
     return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
 
+# @app.before_request
+# def before():
+#     app.logger.info(request.path)
 
 ######################################################################
 # LIST PRODUCT

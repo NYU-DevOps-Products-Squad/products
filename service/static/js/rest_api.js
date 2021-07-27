@@ -97,6 +97,73 @@ $(function () {
         });
 
     });
+    
+    // ****************************************
+    // Update a Product
+    // ****************************************
+
+    $("#update-btn").click(function () {
+
+        var product_id = $("#product_id").val();
+        var name = $("#product_name").val();
+        var description = $("#product_description").val();
+        var price = $("#product_price").val();
+        var inventory = $("#product_inventory").val();
+        var owner = $("#product_owner").val();
+        var category = $("#product_category").val();
+
+        var data = {
+            "name": name,
+            "description": description,
+            "price": price,
+            "inventory": inventory,
+            "owner": owner,
+            "category": category
+        };
+
+        var ajax = $.ajax({
+                type: "PUT",
+                url: "/products/" + product_id,
+                contentType: "application/json",
+                data: JSON.stringify(data)
+            })
+
+        ajax.done(function(res){
+            update_form_data(res)
+            flash_message("Success")
+        });
+
+        ajax.fail(function(res){
+            flash_message(res.responseJSON.message)
+            //flash_message("Success")
+        });
+
+    });
+    
+    // ****************************************
+    // Delete a Product
+    // ****************************************
+
+    $("#delete-btn").click(function () {
+
+        var product_id = $("#product_id").val();
+
+        var ajax = $.ajax({
+            type: "DELETE",
+            url: "/products/" + product_id,
+            contentType: "application/json",
+            data: '',
+        })
+
+        ajax.done(function(res){
+            clear_form_data()
+            flash_message("Product has been Deleted!")
+        });
+
+        ajax.fail(function(res){
+            flash_message("Server error!")
+        });
+    });
 
     // ****************************************
     // Clear the form
@@ -107,45 +174,85 @@ $(function () {
         clear_form_data()
     });
 
+// ****************************************
+    // Search for a Product
     // ****************************************
-    // Read a Product
-    // ****************************************
 
-    $("#read-btn").click(function (){
-        var name = $("#product_name").val();
+    $("#search-btn").click(function () {
+      var name = $("#product_name").val();
+      var price = $("#product_price").val();
+      var owner = $("#product_owner").val();
+      var category = $("#product_category").val();
 
-        var queryString = ""
+      var queryString = ""
 
-        if (name) {
-            queryString += 'name=' + name
+      if (price) {
+        queryString += 'low=' + price + '&high=' + price
+      }
+      if (name) {
+        if (queryString.length > 0) {
+          queryString += '&name=' + name
+        }else{
+          queryString += 'name=' + name
         }
+      }
+      if (category) {
+          if (queryString.length > 0) {
+              queryString += '&category=' + category
+          } else {
+              queryString += 'category=' + category
+          }
+      }
+      if (owner) {
+          if (queryString.length > 0) {
+              queryString += '&owner=' + owner
+          } else {
+              queryString += 'owner=' + owner
+          }
+      }
 
-        var ajax = $.ajax({
-            type: "GET",
-            url: "/products?" + queryString,
-            contentType: "application/json",
-            data: ''
-        })
+      var ajax = $.ajax({
+          type: "GET",
+          url: "/products?" + queryString,
+          contentType: "application/json",
+          data: ''
+      })
 
-        ajax.done(function(res){
-            var product = res[0];
-            $("#product_id").val(product.id);
-            $("#product_name").val(product.name);
-            $("#product_description").val(product.description);
-            $("#product_price").val(product.price);
-            $("#product_inventory").val(product.inventory);
-            $("#product_owner").val(product.owner);
-            $("#product_category").val(product.category);
-            flash_message("Success")
-        });
+      ajax.done(function(res){
+          //alert(res.toSource())
+          $("#search_results").empty();
+          $("#search_results").append('<table class="table-striped" cellpadding="10">');
+          var header = '<tr>'
+          header += '<th style="width:10%">ID</th>'
+          header += '<th style="width:40%">Name</th>'
+          header += '<th style="width:40%">Price</th>'
+          header += '<th style="width:40%">Category</th>'
+          header += '<th style="width:10%">Owner</th></tr>'
+          $("#search_results").append(header);
+          var firstProduct = "";
+          for(var i = 0; i < res.length; i++) {
+              var product = res[i];
+              var row = "<tr><td>"+product._id+"</td><td>"+product.name+"</td><td>"+product.price+"</td><td>"+product.category+"</td><td>"+product.owner+"</td></tr>";
+              $("#search_results").append(row);
+              if (i == 0) {
+                  firstProduct = product;
+              }
+          }
 
-        ajax.fail(function(res){
-            clear_form_data()
-            flash_message(res.responseJSON.message)
-        });
+          $("#search_results").append('</table>');
 
-    });
+          // copy the first result to the form
+          if (firstProduct != "") {
+              update_form_data(firstProduct)
+          }
 
+          flash_message("Success")
+      });
 
+      ajax.fail(function(res){
+          flash_message(res.responseJSON.message)
+      });
+
+  });
 
 })
