@@ -162,3 +162,12 @@ class Product(db.Model):
         """
         logger.info("Processing owner query for %s ...", owner)
         return cls.query.filter(cls.owner == owner)
+
+    @classmethod
+    def find_by_category(cls, category):
+        """Returns all Products with the given category
+        Args:
+            category (string): the category of the Products you want to match
+        """
+        logger.info("Processing category query for %s ...", category)
+        return cls.query.filter(cls.category == category)
