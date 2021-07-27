@@ -82,3 +82,14 @@ Scenario: Search all products owned by sun
     And I should not see "dog" in the results
     And I should not see "book" in the results
 
+Scenario: Delete a Product
+    When I visit the "Home Page"
+    And I set the "Name" to "banana"
+    And I press the "Search" button
+    Then I should see "banana" in the "Name" field
+    And I should see "fruit" in the "Category" field
+    When I copy the "ID" field
+    And I press the "Clear" button
+    And I paste the "ID" field
+    And I press the "Delete" button
+    Then I should see the message "Product has been Deleted!"
