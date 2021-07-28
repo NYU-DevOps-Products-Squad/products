@@ -147,6 +147,18 @@ class TestProduct(unittest.TestCase):
         self.assertEqual(products[0].owner, "test person2")
         self.assertEqual(products[0].category, "A")
 
+    def test_find_by_category(self):
+        """ Find products by Category """
+        Product(name = "test1", description = "test des1", price = 105, inventory = 100, owner = "test person1", category = "A").create()
+        Product(name = "test2", description = "test des2", price = 85, inventory = 300, owner = "test person2", category = "B").create()
+        products = Product.find_by_category("B")
+        self.assertEqual(products[0].name, "test2")
+        self.assertEqual(products[0].description, "test des2")
+        self.assertEqual(products[0].price, 85)
+        self.assertEqual(products[0].inventory, 300)
+        self.assertEqual(products[0].owner, "test person2")
+        self.assertEqual(products[0].category, "B")
+
     def test_create_a_product(self):
         """ Test a product and assert that it exists """
         product = Product(name="apple", description = "good", price = 1.5, inventory = 100, owner = "sun123", category="fruit" )
