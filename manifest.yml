@@ -1,0 +1,18 @@
+---
+# This manifest deploys a Python Flask application with a Cloudant database
+applications:
+- name: NYU-DevOps-Summer-2021-Product
+  path: .
+  instances: 2
+  memory: 1024M
+  routes:
+  - route: NYU-DevOps-Summer-2021-Product.us-south.cf.appdomain.cloud
+  disk_quota: 1024M
+  buildpacks: 
+  - python_buildpack
+  timeout: 180
+  services:
+  - ElephantSQL
+  env:
+    FLASK_APP : service:app
+    FLASK_DEBUG : false
