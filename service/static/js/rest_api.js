@@ -173,6 +173,44 @@ $(function () {
         $("#product_id").val("");
         clear_form_data()
     });
+    
+    // ****************************************
+    // Purchase a Product
+    // ****************************************
+
+    $("#purchase-btn").click(function () {
+
+        var product_id = $("#product_purchase_id").val();
+        var user_id = $("#product_user_id").val();
+        var product_amount = $("#product_amount").val();
+
+        var data = {
+            "amount": product_amount,
+            "user_id": user_id
+        };
+
+        if (product_id) {
+            var ajax = $.ajax({
+                type: "PUT",
+                url: "/products/" + product_id + "/purchase",
+                contentType: "application/json",
+                data: JSON.stringify(data),
+            })
+
+            ajax.done(function(res){
+                console.log(data)
+                clear_form_data()
+                flash_message("Success")
+            });
+
+            ajax.fail(function(res){
+                console.log(data)
+                flash_message(res.responseJSON.message)
+            });
+        } else {
+            flash_message("Product ID can not be empty")
+        }
+    });
 
     // ****************************************
     // Search for a Product
