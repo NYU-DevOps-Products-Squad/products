@@ -76,6 +76,13 @@ product_model = api.inherit(
     }
 )
 
+purchase_model = api.model('Purchase', {
+    'id': fields.Integer(required=True,
+                        description='The id of the Product'),
+    'amount': fields.Integer(required=True,
+                             description='The amount of the Product')
+})
+
 # query string arguments
 # FIXME: do not use this args!
 product_args = reqparse.RequestParser()
@@ -106,7 +113,7 @@ class ProductResource(Resource):
     @api.response(400, 'The posted Product data was not valid')
     @api.expect(product_model)
     @api.marshal_with(product_model)
-    def put(product_id):
+    def put(self, product_id):
         """
         Update a Product
         This endpoint will update a Product based the body that is posted
@@ -115,9 +122,12 @@ class ProductResource(Resource):
         check_content_type("application/json")
         product = Product.find(product_id)
         if not product:
-            raise NotFound("Product with id %d was not found." % product_id)
+            abort(status.HTTP_404_NOT_FOUND, "Product with id '{}' was not found.".format(product_id))
 
-        product.deserialize(request.get_json())
+        app.logger.debug('Payload = %s', api.payload)
+        data = api.payload
+        product.deserialize(data)
+        product.id = product_id
         product.update()
         app.logger.info("Product with id [%d] updated.", product.id)
         return product.serialize(), status.HTTP_200_OK
@@ -128,7 +138,7 @@ class ProductResource(Resource):
     @api.doc('delete_products')
     @api.response(204, 'Product deleted')
     # @app.route("/products/<int:product_id>", methods=["DELETE"])
-    def delete(product_id):
+    def delete(self, product_id):
         """
         Delete a Product
         This endpoint will delete a Product based the id specified in the path
@@ -219,6 +229,7 @@ def create_product():
 ######################################################################
 @api.route('/products/<product_id>/purchase')
 @api.param('product_id', 'The Product identifier')
+@api.expect(purchase_model)
 class PurchaseResource(Resource):
     # #####################################################################
     # PURCHASE A product
@@ -226,7 +237,7 @@ class PurchaseResource(Resource):
     @api.doc('purchase_products')
     @api.response(404, 'Product not found')
     @api.response(409, 'The Product cannot be purchased now')
-    def post(product_id):
+    def post(self, product_id):
         """Purchase a product"""
         app.logger.info("Request to purchase product with id %s", product_id)
         check_content_type("application/json")
