@@ -8,6 +8,7 @@ import os
 import sys
 import logging
 from flask import Flask, jsonify, request, url_for, make_response, abort
+from flask_restx import Api, Resource, fields, reqparse, inputs
 
 
 
@@ -35,25 +36,109 @@ def index():
     # )
     return app.send_static_file("index.html")
 
-######################################################################
-# UPDATE AN EXISTING PRODUCT
-######################################################################
-@app.route("/products/<int:product_id>", methods=["PUT"])
-def update_products(product_id):
-    """
-    Update a Product
-    This endpoint will update a Product based the body that is posted
-    """
-    app.logger.info("Request to update Product with id %s", product_id)
-    check_content_type("application/json")
-    product = Product.find(product_id)
-    if not product:
-        raise NotFound("Product with id %d was not found." % product_id)
 
-    product.deserialize(request.get_json())
-    product.update()
-    app.logger.info("Product with id [%d] updated.", product.id)
-    return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
+######################################################################
+# Configure Swagger before initializing it
+######################################################################
+api = Api(app,
+          version='1.0.0',
+          title='Product Demo REST API Service',
+          description='This is a sample server Product store server.',
+          default='products',
+          default_label='Product shop operations',
+          doc='/apidocs', # default also could use doc='/apidocs/'
+          prefix='/api'
+         )
+
+
+# Define the model so that the docs reflect what can be sent
+create_model = api.model('Product', {
+    'name': fields.String(required=True,
+                          description='The name of the Product'),
+    'description': fields.String(required=True,
+                          description='The description of the Product'),
+    'price': fields.Float(required=False,
+                          description='The price of the Product'),
+    'inventory': fields.Integer(required=False,
+                          description='The inventory of the Product'),
+    'owner': fields.String(required=False,
+                          description='The owner of the Product'),
+    'category': fields.String(required=False,
+                              description='The category of Product')
+})
+
+product_model = api.inherit(
+    'ProductModel',
+    create_model,
+    {
+        '_id': fields.String(readOnly=True,
+                            description='The unique id assigned internally by service'),
+    }
+)
+
+# query string arguments
+# FIXME: do not use this args!
+product_args = reqparse.RequestParser()
+product_args.add_argument('name', type=str, required=False, help='List Pets by name')
+product_args.add_argument('category', type=str, required=False, help='List Pets by category')
+
+
+######################################################################
+#  PATH: /products/{id}
+######################################################################
+@api.route('/products/<product_id>')
+@api.param('product_id', 'The Product identifier')
+class ProductResource(Resource):
+    """
+    ProductResource class
+
+    Allows the manipulation of a single Pet
+    GET /product{id} - Returns a Product with the id
+    PUT /product{id} - Update a Product with the id
+    DELETE /product{id} -  Deletes a Product with the id
+    """
+
+    ######################################################################
+    # UPDATE AN EXISTING PRODUCT
+    ######################################################################
+    @api.doc('update_products')
+    @api.response(404, 'Product not found')
+    @api.response(400, 'The posted Product data was not valid')
+    @api.expect(product_model)
+    @api.marshal_with(product_model)
+    def put(product_id):
+        """
+        Update a Product
+        This endpoint will update a Product based the body that is posted
+        """
+        app.logger.info("Request to update Product with id %s", product_id)
+        check_content_type("application/json")
+        product = Product.find(product_id)
+        if not product:
+            raise NotFound("Product with id %d was not found." % product_id)
+
+        product.deserialize(request.get_json())
+        product.update()
+        app.logger.info("Product with id [%d] updated.", product.id)
+        return product.serialize(), status.HTTP_200_OK
+
+    ######################################################################
+    # DELETE A PRODUCT
+    ######################################################################
+    @api.doc('delete_products')
+    @api.response(204, 'Product deleted')
+    # @app.route("/products/<int:product_id>", methods=["DELETE"])
+    def delete(product_id):
+        """
+        Delete a Product
+        This endpoint will delete a Product based the id specified in the path
+        """
+        app.logger.info("Request to delete Product with id %s", product_id)
+        product = Product.find(product_id)
+        if product:
+            product.delete()
+        app.logger.info("Product with id [%s] delete", product_id)
+        return '', status.HTTP_204_NO_CONTENT
 
 
 ######################################################################
@@ -130,35 +215,32 @@ def create_product():
 
 
 ######################################################################
-# DELETE A PRODUCT
+#  PATH: /products/{id}/purchase
 ######################################################################
-@app.route("/products/<int:product_id>", methods=["DELETE"])
-def delete_products(product_id):
-    """
-    Delete a Product
-    This endpoint will delete a Product based the id specified in the path
-    """
-    app.logger.info("Request to delete Product with id %s", product_id)
-    product = Product.find(product_id)
-    if product:
-        product.delete()
-    app.logger.info("Product with id [%s] delete", product_id)
-    return make_response(jsonify(message = ''), status.HTTP_204_NO_CONTENT)
-
-# #####################################################################
-# PURCHASE A product
-# #####################################################################
-@app.route("/products/<int:product_id>/purchase", methods=["PUT"])
-def purchase_products(product_id):
-    """Purchase a product"""
-    app.logger.info("Request to purchase product with id %s", product_id)
-    check_content_type("application/json")
-    product = Product.find(product_id)
-    if not product:
-        abort(
-            status.HTTP_404_NOT_FOUND, "product with id '{}' was not found.".format(product_id)
-        )
-    return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
+@api.route('/products/<product_id>/purchase')
+@api.param('product_id', 'The Product identifier')
+class PurchaseResource(Resource):
+    # #####################################################################
+    # PURCHASE A product
+    # #####################################################################
+    @api.doc('purchase_products')
+    @api.response(404, 'Product not found')
+    @api.response(409, 'The Product cannot be purchased now')
+    def post(product_id):
+        """Purchase a product"""
+        app.logger.info("Request to purchase product with id %s", product_id)
+        check_content_type("application/json")
+        product = Product.find(product_id)
+        if not product:
+            abort(
+                status.HTTP_404_NOT_FOUND, "product with id '{}' was not found.".format(product_id)
+            )
+        # TODO: Call Shopcarts & Inventory Service APIs to execute the purchase
+        # result = other_service.purchase(product)
+        # if not result.success:
+        #     abort(status.HTTP_409_CONFLICT, 'Product with id [{}] cannot be purchased now.'.format(product_id))
+        app.logger.info('Peroduct with id [%s] has been purchased!', product.id)
+        return product.serialize(), status.HTTP_200_OK
 
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S
