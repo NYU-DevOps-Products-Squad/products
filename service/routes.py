@@ -47,7 +47,7 @@ api = Api(app,
           default='products',
           default_label='Product shop operations',
           doc='/apidocs', # default also could use doc='/apidocs/'
-          prefix='/api'
+          prefix=''
          )
 
 
@@ -93,7 +93,7 @@ product_args.add_argument('category', type=str, required=False, help='List Pets 
 ######################################################################
 #  PATH: /products/{id}
 ######################################################################
-@api.route('/products/<product_id>')
+@api.route('/products/<int:product_id>')
 @api.param('product_id', 'The Product identifier')
 class ProductResource(Resource):
     """
@@ -111,7 +111,7 @@ class ProductResource(Resource):
     @api.doc('update_products')
     @api.response(404, 'Product not found')
     @api.response(400, 'The posted Product data was not valid')
-    @api.expect(product_model)
+    @api.expect(product_model, validate=True)
     @api.marshal_with(product_model)
     def put(self, product_id):
         """
@@ -149,7 +149,6 @@ class ProductResource(Resource):
             product.delete()
         app.logger.info("Product with id [%s] delete", product_id)
         return '', status.HTTP_204_NO_CONTENT
-
 
 ######################################################################
 # LIST PRODUCT
@@ -229,7 +228,7 @@ def create_product():
 ######################################################################
 @api.route('/products/<product_id>/purchase')
 @api.param('product_id', 'The Product identifier')
-@api.expect(purchase_model)
+# @api.expect(purchase_model)
 class PurchaseResource(Resource):
     # #####################################################################
     # PURCHASE A product
@@ -237,15 +236,21 @@ class PurchaseResource(Resource):
     @api.doc('purchase_products')
     @api.response(404, 'Product not found')
     @api.response(409, 'The Product cannot be purchased now')
+    @api.expect(purchase_model, validate=True)
+    @api.marshal_with(purchase_model)
     def post(self, product_id):
         """Purchase a product"""
-        app.logger.info("Request to purchase product with id %s", product_id)
+        data = api.payload
+        amount = data['amount']
+        app.logger.info("Request to purchase %d product with id %s", amount, product_id)
         check_content_type("application/json")
         product = Product.find(product_id)
         if not product:
             abort(
                 status.HTTP_404_NOT_FOUND, "product with id '{}' was not found.".format(product_id)
             )
+        product.inventory -= amount
+        product.update()
         # TODO: Call Shopcarts & Inventory Service APIs to execute the purchase
         # result = other_service.purchase(product)
         # if not result.success:
