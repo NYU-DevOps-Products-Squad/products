@@ -8,17 +8,26 @@ import os
 import sys
 import logging
 from flask import Flask, jsonify, request, url_for, make_response, abort
-
-
-
 # For this example we'll use SQLAlchemy, a popular ORM that supports a
 # variety of backends including SQLite, MySQL, and PostgreSQL
 from flask_sqlalchemy import SQLAlchemy
 from service.models import Product, DataValidationError
 from werkzeug.exceptions import NotFound
+from flask_restx import Api, Resource, fields, reqparse, inputs
 # Import Flask application
 from service import app, status  # HTTP Status Codes
 # app.config["APPLICATION_ROOT"] = "/api"
+from functools import wraps
+import uuid
+
+
+authorizations = {
+    'apikey': {
+        'type': 'apiKey',
+        'in': 'header',
+        'name': 'X-Api-Key'
+    }
+}
 
 ######################################################################
 # GET INDEX
@@ -26,14 +35,115 @@ from service import app, status  # HTTP Status Codes
 @app.route("/")
 def index():
     """ Root URL response """
-    # return (
-    #      jsonify(
-    #         name="Product Demo REST API Service",
-    #         version="1.0",
-    #     ),
-    #     status.HTTP_200_OK,
-    # )
     return app.send_static_file("index.html")
+# ######################################################################
+# # Error Handlers
+# ######################################################################
+# @app.errorhandler(DataValidationError)
+# def request_validation_error(error):  # pragma: no cover
+#     """ Handles Value Errors from bad data """
+#     return bad_request(error)
+
+
+# ######################################################################
+# # Configure Swagger before initializing it
+# ######################################################################
+api = Api(app,
+          version='1.0.0',
+          title='Product Demo REST API Service',
+          description='This is a sample server Product store server.',
+          default='products',
+          default_label='Product shop operations',
+          doc='/apidocs', # default also could use doc='/apidocs/'
+          authorizations=authorizations,
+          prefix='/'
+         )
+
+# Define the model so that the docs reflect what can be sent
+create_model = api.model('Product', {
+    'name': fields.String(required=True,
+                          description='The name of the roduct'),
+    'description': fields.String(required=True,
+                              description='Thedescription of Product'),
+    'price': fields.Float(required=True,
+                              description='The price of Product'),
+    'inventory': fields.Integer(required=True,
+                              description='The inventory of Product'),
+    'owner': fields.String(required=True,
+                              description='The owner of Product'),
+    'category': fields.String(required=True,
+                              description='The category of Product')
+
+})
+
+product_model = api.inherit(
+    'ProductModel', 
+    create_model,
+    {
+        'id': fields.String(readOnly=True,
+                            description='The unique id assigned internally by service'),
+    }
+)
+
+# ######################################################################
+# # Function to generate a random API key (good for testing)
+# ######################################################################
+def generate_apikey():
+    """ Helper function used when testing API keys """
+    return uuid.uuid4().hex
+
+######################################################################
+#  PATH: /products/{id}
+######################################################################
+@api.route('/products/<product_id>')
+@api.param('product_id', 'The Product identifier')
+class ProductResource(Resource):
+    ######################################################################
+    # RETRIEVE A PRODUCT
+    ######################################################################
+    @api.doc('get_products')
+    @api.response(404, 'Product not found')
+    @api.marshal_with(product_model)
+    def get(self, product_id):
+        """
+        Retrieve a single Product
+
+        This endpoint will return a Product based on it's id
+        """
+        app.logger.info("Request for product with id: %s", product_id)
+        product = Product.find(product_id)
+        if not product:
+            api.abort(status.HTTP_404_NOT_FOUND, "Product with id '{}' was not found.".format(product_id))
+        # product = Product.find_or_404(product_id)
+
+        return product.serialize(), status.HTTP_200_OK
+
+
+
+# ######################################################################
+# #  PATH: /products
+# ######################################################################
+@api.route('/products', strict_slashes=False)
+class ProductCollection(Resource):
+    @api.doc('create_products')
+    @api.expect(create_model)
+    @api.response(400, 'The posted data was not valid')
+    @api.response(201, 'Product created successfully')
+    @api.marshal_with(product_model, code=201)
+    def post(self):
+        """
+        Creates a Product
+        This endpoint will create a Product based the data in the body that is posted
+        """
+        app.logger.info("Request to create a product")
+        check_content_type("application/json")
+        product = Product()
+        app.logger.debug('Payload = %s', api.payload)
+        product.deserialize(api.payload)
+        product.create()
+        app.logger.info('Product with new id [%s] created!', product.id)
+        location_url = api.url_for(ProductResource, product_id=product.id, _external=True)
+        return product.serialize(), status.HTTP_201_CREATED, {'Location': location_url}
 
 ######################################################################
 # UPDATE AN EXISTING PRODUCT
@@ -88,44 +198,25 @@ def list_product():
     return make_response(jsonify(results), status.HTTP_200_OK)
 
 
-######################################################################
-# RETRIEVE A PRODUCT
-######################################################################
-@app.route("/products/<int:product_id>", methods=["GET"])
-def get_product(product_id):
-    """
-    Retrieve a single Product
-
-    This endpoint will return a Product based on it's id
-    """
-    app.logger.info("Request for product with id: %s", product_id)
-    # product = Product.find(product_id)
-    # if not product:
-    #     raise NotFound("product with id '{}' was not found.".format(product_id))
-
-    product = Product.find_or_404(product_id)
-
-    return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
-
-######################################################################
-# ADD A NEW PRODUCT
-######################################################################
-@app.route("/products", methods=["POST"])
-def create_product():
-    """
-    Creates a Product
-    This endpoint will create a Product based the data in the body that is posted
-    """
-    app.logger.info("Request to create a product")
-    check_content_type("application/json")
-    product = Product()
-    product.deserialize(request.get_json())
-    product.create()
-    message = product.serialize()
-    location_url = url_for("get_product", product_id=product.id, _external=True)
-    return make_response(
-        jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
-    )
+# ######################################################################
+# # ADD A NEW PRODUCT
+# ######################################################################
+# @app.route("/products", methods=["POST"])
+# def create_product():
+#     """
+#     Creates a Product
+#     This endpoint will create a Product based the data in the body that is posted
+#     """
+#     app.logger.info("Request to create a product")
+#     check_content_type("application/json")
+#     product = Product()
+#     product.deserialize(request.get_json())
+#     product.create()
+#     message = product.serialize()
+#     location_url = url_for("get_product", product_id=product.id, _external=True)
+#     return make_response(
+#         jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
+#     )
 
 
 
@@ -159,6 +250,25 @@ def purchase_products(product_id):
             status.HTTP_404_NOT_FOUND, "product with id '{}' was not found.".format(product_id)
         )
     return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
+
+
+# ######################################################################
+# # RETRIEVE A PRODUCT
+# ######################################################################
+# @app.route("/products/<int:product_id>", methods=["GET"])
+# def get_product(product_id):
+#     """
+#     Retrieve a single Product
+#     This endpoint will return a Product based on it's id
+#     """
+#     app.logger.info("Request for product with id: %s", product_id)
+#     # product = Product.find(product_id)
+#     # if not product:
+#     #     raise NotFound("product with id '{}' was not found.".format(product_id))
+
+#     product = Product.find_or_404(product_id)
+
+#     return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
 
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S
