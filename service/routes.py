@@ -79,7 +79,13 @@ product_model = api.inherit(
 )
 
 
-
+# query string arguments
+product_args = reqparse.RequestParser()
+product_args.add_argument('name', type=str, required=False, help='List Pets by name')
+product_args.add_argument('category', type=str, required=False, help='List Pets by category')
+product_args.add_argument('owner', type=str, required=False, help='List Pets by owner')
+product_args.add_argument('low', type=str, required=False, help='List Pets by min price')
+product_args.add_argument('high', type=str, required=False, help='List Pets by max price')
 
 # ######################################################################
 # # Function to generate a random API key (good for testing)
@@ -121,6 +127,39 @@ class ProductResource(Resource):
 # ######################################################################
 @api.route('/products', strict_slashes=False)
 class ProductCollection(Resource):
+    ######################################################################
+    # LIST PRODUCT
+    ######################################################################
+    @api.doc('list_products')
+    @api.expect(product_args, validate=True)
+    @api.marshal_list_with(product_model)
+    def get(self):
+        """ Returns all of the products """
+        app.logger.info("Request for product list")
+        products = []
+        name = request.args.get('name')
+        price_low = request.args.get("low")
+        price_high = request.args.get("high")
+        owner = request.args.get("owner")
+        category = request.args.get("category")
+        if name:
+            app.logger.info("Find by name: %s", name)
+            products = Product.find_by_name(name).all()
+        elif price_low and price_high:
+            app.logger.info("Find by price from %s to %s", price_low, price_high)
+            products = Product.find_by_price(price_low, price_high).all()
+        elif owner:
+            app.logger.info("Find by owner: %s", owner)
+            products = Product.find_by_owner(owner).all()
+        elif category:
+            app.logger.info("Find by category: %s", category)
+            products = Product.find_by_category(category).all()
+        else:
+            products = Product.all()
+        app.logger.info('[%s] Products returned', len(products))
+        results = [Product.serialize() for Product in products]
+        return results, status.HTTP_200_OK
+
     @api.doc('create_products')
     @api.expect(create_model)
     @api.response(400, 'The posted data was not valid')
