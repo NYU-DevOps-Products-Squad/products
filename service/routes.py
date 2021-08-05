@@ -67,7 +67,7 @@ product_model = api.inherit(
     'ProductModel',
     create_model,
     {
-        'id': fields.String(readOnly=True,
+        'id': fields.Integer(readOnly=True,
                             description='The unique id assigned internally by service'),
     }
 )
@@ -128,8 +128,11 @@ class ProductCollection(Resource):
         results = [Product.serialize() for Product in products]
         return results, status.HTTP_200_OK
 
+    ######################################################################
+    # CREATE A PRODUCT
+    ######################################################################
     @api.doc('create_products')
-    @api.expect(create_model, validate=True)
+    @api.expect(create_model)
     @api.response(400, 'The posted data was not valid')
     @api.response(201, 'Product created successfully')
     @api.marshal_with(product_model, code=201)
@@ -142,6 +145,7 @@ class ProductCollection(Resource):
         check_content_type("application/json")
         product = Product()
         app.logger.debug('Payload = %s', api.payload)
+        create_model.validate(api.payload) # validate manually
         product.deserialize(api.payload)
         product.create()
         app.logger.info('Product with new id [%s] created!', product.id)

@@ -173,14 +173,16 @@ class TestProductServer(TestCase):
     def test_purchase_a_product(self):
         """Purchase a product"""
         self._create_products(2)
-        resp = self.app.put("/products/2/purchase", content_type="application/json")
+        purchase_model = {"id": 2, "amount": 1}
+        resp = self.app.post("/products/2/purchase", json=purchase_model, content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         resp = self.app.get("/products/2", content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
     def test_purchase_not_available(self):
         """Purchase a product that is not available"""
-        resp = self.app.put("/products/2/purchase", content_type="application/json")
+        purchase_model = {"id": 2, "amount": 1}
+        resp = self.app.post("/products/2/purchase", json=purchase_model, content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
         resp = self.app.get("/products/2", content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
@@ -194,7 +196,6 @@ class TestProductServer(TestCase):
             "/products", json=data, content_type="application/json"
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn(b'Bad Request', resp.data)
 
     # def test_404_not_found_error(self):
     #     '''Resources Not Found Error '''

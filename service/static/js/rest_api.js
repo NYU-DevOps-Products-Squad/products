@@ -44,25 +44,14 @@ $(function () {
         var owner = $("#product_owner").val();
         var category = $("#product_category").val();
 
-        var data;
-        if(name.length==0){
-            data = {
-                "description": description,
-                "price": price,
-                "inventory": inventory,
-                "owner": owner,
-                "category": category
-            };
-        }else{
-            data = {
-                "name": name,
-                "description": description,
-                "price": price,
-                "inventory": inventory,
-                "owner": owner,
-                "category": category
-            };
-        }
+        var data = {
+            "name": name,
+            "description": description,
+            "price": parseFloat(price),
+            "inventory": parseInt(inventory),
+            "owner": owner,
+            "category": category
+        };
 
         var ajax = $.ajax({
             type: "POST",
@@ -126,8 +115,8 @@ $(function () {
         var data = {
             "name": name,
             "description": description,
-            "price": price,
-            "inventory": inventory,
+            "price": parseFloat(price),
+            "inventory": parseInt(inventory),
             "owner": owner,
             "category": category
         };
@@ -196,13 +185,13 @@ $(function () {
         var product_amount = $("#product_amount").val();
 
         var data = {
-            "amount": product_amount,
-            "user_id": user_id
+            "amount": parseInt(product_amount),
+            "id": parseInt(product_id)
         };
 
         if (product_id) {
             var ajax = $.ajax({
-                type: "PUT",
+                type: "POST",
                 url: "/products/" + product_id + "/purchase",
                 contentType: "application/json",
                 data: JSON.stringify(data),
