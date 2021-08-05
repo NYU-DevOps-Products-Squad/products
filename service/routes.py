@@ -36,13 +36,6 @@ authorizations = {
 def index():
     """ Root URL response """
     return app.send_static_file("index.html")
-# ######################################################################
-# # Error Handlers
-# ######################################################################
-# @app.errorhandler(DataValidationError)
-# def request_validation_error(error):  # pragma: no cover
-#     """ Handles Value Errors from bad data """
-#     return bad_request(error)
 
 
 # ######################################################################
@@ -84,6 +77,9 @@ product_model = api.inherit(
                             description='The unique id assigned internally by service'),
     }
 )
+
+
+
 
 # ######################################################################
 # # Function to generate a random API key (good for testing)
@@ -197,29 +193,6 @@ def list_product():
     results = [Product.serialize() for Product in products]
     return make_response(jsonify(results), status.HTTP_200_OK)
 
-
-# ######################################################################
-# # ADD A NEW PRODUCT
-# ######################################################################
-# @app.route("/products", methods=["POST"])
-# def create_product():
-#     """
-#     Creates a Product
-#     This endpoint will create a Product based the data in the body that is posted
-#     """
-#     app.logger.info("Request to create a product")
-#     check_content_type("application/json")
-#     product = Product()
-#     product.deserialize(request.get_json())
-#     product.create()
-#     message = product.serialize()
-#     location_url = url_for("get_product", product_id=product.id, _external=True)
-#     return make_response(
-#         jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
-#     )
-
-
-
 ######################################################################
 # DELETE A PRODUCT
 ######################################################################
@@ -250,25 +223,6 @@ def purchase_products(product_id):
             status.HTTP_404_NOT_FOUND, "product with id '{}' was not found.".format(product_id)
         )
     return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
-
-
-# ######################################################################
-# # RETRIEVE A PRODUCT
-# ######################################################################
-# @app.route("/products/<int:product_id>", methods=["GET"])
-# def get_product(product_id):
-#     """
-#     Retrieve a single Product
-#     This endpoint will return a Product based on it's id
-#     """
-#     app.logger.info("Request for product with id: %s", product_id)
-#     # product = Product.find(product_id)
-#     # if not product:
-#     #     raise NotFound("product with id '{}' was not found.".format(product_id))
-
-#     product = Product.find_or_404(product_id)
-
-#     return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
 
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S

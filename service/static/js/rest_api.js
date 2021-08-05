@@ -44,14 +44,25 @@ $(function () {
         var owner = $("#product_owner").val();
         var category = $("#product_category").val();
 
-        var data = {
-            "name": name,
-            "description": description,
-            "price": price,
-            "inventory": inventory,
-            "owner": owner,
-            "category": category
-        };
+        var data;
+        if(name.length==0){
+            data = {
+                "description": description,
+                "price": price,
+                "inventory": inventory,
+                "owner": owner,
+                "category": category
+            };
+        }else{
+            data = {
+                "name": name,
+                "description": description,
+                "price": price,
+                "inventory": inventory,
+                "owner": owner,
+                "category": category
+            };
+        }
 
         var ajax = $.ajax({
             type: "POST",
