@@ -11,6 +11,7 @@ install: "pip install -r requirements.txt"
 env:
   global:
   - DATABASE_URI='postgres://postgres:@localhost:5432/testdb'
+  - VCAP_SERVICES = '{   "user-provided": [     {       "label": "user-provided",       "name": "ElephantSQL",       "tags": [],       "instance_guid": "72b59aa3-f77e-4d86-9111-2582fff47787",       "instance_name": "ElephantSQL",       "binding_guid": "429ec5db-f0fc-4172-b9ae-3b940742cc90",       "binding_name": null,       "credentials": {         "url": "postgres://cldzutkk:3pYtMMg3zo0ToM4vnp1XoJXA6lbYxRWz@kashin.db.elephantsql.com:5432/cldzutkk"       },       "syslog_drain_url": "",       "volume_mounts": []     }   ] }'
 
 # Run Tests
 jobs:
