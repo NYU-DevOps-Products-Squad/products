@@ -31,6 +31,10 @@ jobs:
             - chromium-chromedriver 
             - python3-selenium
       before_script:
+      # Update the chromedriver to the latest version, otherwise it would not be compatible with Chrome v92
+        - LATEST_CHROMEDRIVER_VERSION=`curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE"`
+        - curl "https://chromedriver.storage.googleapis.com/${LATEST_CHROMEDRIVER_VERSION}/chromedriver_linux64.zip" -O
+        - unzip chromedriver_linux64.zip -d ~/bin
         - psql -c 'create database testdb;' -U postgres
         - chromedriver --version
         - gunicorn --log-level=critical --bind=127.0.0.1:5000 service:app &  # start a Web server in the background
