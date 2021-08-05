@@ -44,8 +44,8 @@ def step_impl(context):
         data = {
             "name": row['name'],
             "description": row['description'],
-            "price": row['price'],
-            "inventory": row['inventory'],
+            "price": float(row['price']),
+            "inventory": int(row['inventory']),
             "owner": row['owner'],
             "category": row['category']
             }
