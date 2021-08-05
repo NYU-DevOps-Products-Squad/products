@@ -18,7 +18,7 @@ jobs:
     - stage: Test
       name: TDD
       before_script: 
-        - psql -c 'create database travis_ci_test;' -U postgres
+        - psql -c 'create database testdb;' -U postgres
       script:
         - nosetests
 
@@ -31,7 +31,7 @@ jobs:
             - chromium-chromedriver 
             - python3-selenium
       before_script:
-        - psql -c 'create database travis_ci_test;' -U postgres
+        - psql -c 'create database testdb;' -U postgres
         - chromedriver --version
         - gunicorn --log-level=critical --bind=127.0.0.1:5000 service:app &  # start a Web server in the background
         - sleep 5 # give Web server some time to bind to sockets, etc
