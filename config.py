@@ -6,7 +6,7 @@ import json
 
 # Get configuration from environment
 DATABASE_URI = os.getenv(
-    "DATABASE_URI", "postgres://cldzutkk:3pYtMMg3zo0ToM4vnp1XoJXA6lbYxRWz@kashin.db.elephantsql.com:5432/cldzutkk"
+    "DATABASE_URI", "postgresql://postgres:postgres@localhost:5432/postgres"
 )
 
 # override if we are running in Cloud Foundry
