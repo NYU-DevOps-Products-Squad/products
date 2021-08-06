@@ -6,7 +6,7 @@ import json
 
 # Get configuration from environment
 DATABASE_URI = os.getenv(
-    "DATABASE_URI", "postgresql://postgres:postgres@localhost:5432/postgres"
+    "DATABASE_URI", "postgres://cldzutkk:3pYtMMg3zo0ToM4vnp1XoJXA6lbYxRWz@kashin.db.elephantsql.com:5432/cldzutkk"
 )
 
 # override if we are running in Cloud Foundry
@@ -18,5 +18,3 @@ if 'VCAP_SERVICES' in os.environ:
 SQLALCHEMY_DATABASE_URI = DATABASE_URI
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-# Secret for session management
-SECRET_KEY = os.getenv("SECRET_KEY", "s3cr3t-key-shhhh")
