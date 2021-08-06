@@ -10,8 +10,7 @@ install: "pip install -r requirements.txt"
 
 env:
   global:
-    - DATABASE_URI='postgres://postgres:@localhost:5432/testdb'
-    - VCAP_SERVICES= '{"user-provided":[{"credentials":{"url":"postgres://cldzutkk:3pYtMMg3zo0ToM4vnp1XoJXA6lbYxRWz@kashin.db.elephantsql.com:5432/cldzutkk"},}]}'
+    - DATABASE_URI='postgres://postgres:@localhost:5432/testdb'}'
   
 
 # Run Tests
