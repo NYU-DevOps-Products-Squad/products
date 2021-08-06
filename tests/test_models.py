@@ -4,6 +4,7 @@ Test cases for Product Model
 import logging
 import unittest
 import os
+import json
 from service import app
 from service.models import Product, DataValidationError, db
 from .factories import ProductFactory

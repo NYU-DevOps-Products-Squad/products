@@ -5,6 +5,7 @@ Test cases can be run with the following:
   coverage report -m
 """
 import os
+import json
 import logging
 from unittest import TestCase, mock
 from unittest.mock import patch
