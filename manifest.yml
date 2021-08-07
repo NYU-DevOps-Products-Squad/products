@@ -4,7 +4,7 @@ applications:
 - name: nyu-product-service-sum21
   path: .
   instances: 2
-  memory: 1024M
+  memory: 512M
   routes:
   - route: NYU-DevOps-Summer-2021-Product.us-south.cf.appdomain.cloud
   disk_quota: 1024M
