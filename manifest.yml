@@ -6,7 +6,7 @@ applications:
   instances: 2
   memory: 512M
   routes:
-  - route: NYU-DevOps-Summer-2021-Product.us-south.cf.appdomain.cloud
+  - route: nyu-product-service-sum21.us-south.cf.appdomain.cloud
   disk_quota: 1024M
   buildpacks: 
   - python_buildpack
